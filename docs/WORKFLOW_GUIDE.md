@@ -24,6 +24,7 @@ A comprehensive guide to maximizing productivity and learning while implementing
 **Location:** VS Code + PDF Viewer (split screen)
 
 **Tools & Setup:**
+
 ```bash
 # Setup (one-time)
 git clone https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch.git
@@ -42,15 +43,17 @@ pip install -r requirements.txt
    - Key Equations: Mark equation numbers (1), (2), etc.
 
 2. **Take Notes** (right side or separate document)
+
    ```
    Paper: GloVe - Global Vectors for Word Representation
    Problem: Word embeddings need both global statistics and local context
-   
+
    Equations to implement:
-   - Eq. (1): w_ij = number of times word i appears in context of word j
-   - Eq. (2): log(X_ij) = w_i^T * w_j + b_i + b_j + \epsilon_ij
-   - Eq. (3): J = sum_ij f(X_ij) * (w_i^T * w_j + b - log(X_ij))^2
-   
+    - X_ij: distance-weighted count of context word j around target word i
+    - Fitted relationship: w_i^T * w_tilde_j + b_i + b_tilde_j ≈ log(X_ij)
+    - Objective: J = sum_ij f(X_ij) * (w_i^T * w_tilde_j + b_i + b_tilde_j - log(X_ij))^2
+    - Weight: f(x) = (x / x_max)^alpha below x_max, otherwise 1
+
    Key hyperparameters:
    - Embedding dimension: d = 50-300
    - Context window: 5-10 words
@@ -58,20 +61,21 @@ pip install -r requirements.txt
    ```
 
 3. **Identify Architecture** (on paper)
+
    ```
    GloVe Architecture:
-   
+
    Input: Corpus text
      ↓
    Build co-occurrence matrix X
      ↓
-   Initialize W_main, W_context (embeddings)
+    Learn separate target/context vectors and biases
      ↓
-   Compute loss: L = sum_ij f(X_ij) * (w_i^T * w_j + b - log(X_ij))^2
+    Compute the weighted squared error over observed pairs (X_ij > 0)
      ↓
-   Optimize with SGD/Adam
+    Optimize with AdaGrad
      ↓
-   Output: Word embeddings W_main
+    Output: target vectors, context vectors, or their sum
    ```
 
 **Output:** `docs/paper_name_notes.md` with key equations and architecture sketch
@@ -80,260 +84,68 @@ pip install -r requirements.txt
 
 ### Phase 2: Implementation (Local - 40-50 minutes)
 
-**Goal:** Code the paper using Copilot assistance, NO manual testing yet.
+**Goal:** Understand and extend the existing implementation; keep testing local before scaling to Colab.
 
 **Location:** VS Code - Single File Focus
 
 **Step 1: Create Implementation File**
 
-```bash
-# Copy template
-cp implementations/models/template.py implementations/models/glove.py
-
-# Open in VS Code
-code implementations/models/glove.py
-```
+The repository already implements GloVe in `implementations/models/glove.py` and text loading in `implementations/utils/glove_data.py`. Do not overwrite the model with `template.py`; use the notebook smoke test before making changes.
 
 **Step 2: Update Header**
 
-```python
+````python
 """
 GloVe: Global Vectors for Word Representation
 Reference: https://nlp.stanford.edu/projects/glove/
-Citation: @article{pennington2014glove,...}
+**Step 2: Use the implemented API**
 
-Key Equations:
-    Eq. (1): X_ij = count(word_i, word_j in context)
-    Eq. (2): log(X_ij) ≈ w_i^T * w_j + b_i + b_j
-    Eq. (3): J = Σ_ij f(X_ij) * (w_i^T * w_j + b - log(X_ij))^2
-    Eq. (4): f(x) = (x / x_max)^0.75 if x < x_max else 1
-    
-Architecture:
-    1. Build co-occurrence matrix from corpus
-    2. Initialize word vectors W and context vectors W'
-    3. Compute weighted MSE loss
-    4. Optimize with SGD
-    5. Output: W_main (discards W_context after training)
-"""
-```
-
-**Step 3: Implement Step-by-Step Using Copilot**
-
-**Pattern: Equation → Docstring → Let Copilot Generate**
+The paper-specific implementation is already in the repository. Its actual names are `GloveModel`, `build_cooccurrence_matrix`, and `glove_loss`; there is no `GloVeLoss` class. The loss accepts only observed positive counts and uses `log(X_ij)` directly, so do not add 1 to counts.
 
 ```python
-class GloVeModel(nn.Module):
-    """
-    GloVe word embedding model implementation.
-    
-    References:
-        - Paper: https://nlp.stanford.edu/projects/glove/
-        - Implements Eq. (2) and (3)
-    """
-    
-    def __init__(
-        self,
-        vocab_size: int,
-        embedding_dim: int,
-        x_max: float = 100.0,
-        alpha: float = 0.75,
-    ):
-        """
-        Initialize GloVe model.
-        
-        Args:
-            vocab_size: Size of vocabulary
-            embedding_dim: Dimension of embeddings (d in paper)
-            x_max: Maximum co-occurrence count for weighting (Eq. 4)
-            alpha: Power parameter in weighting function (Eq. 4)
-        """
-        super().__init__()
-        self.vocab_size = vocab_size
-        self.embedding_dim = embedding_dim
-        self.x_max = x_max
-        self.alpha = alpha
-        
-        # Section 2.1: Word vector and context vector embeddings
-        # Initialize W_main and W_context (Eq. 2)
-        self.W = nn.Parameter(torch.randn(vocab_size, embedding_dim) * 0.01)
-        self.W_context = nn.Parameter(torch.randn(vocab_size, embedding_dim) * 0.01)
-        
-        # Bias terms from Eq. (2)
-        self.b = nn.Parameter(torch.zeros(vocab_size))
-        self.b_context = nn.Parameter(torch.zeros(vocab_size))
-    
-    def forward(self, i_idx: torch.Tensor, j_idx: torch.Tensor) -> torch.Tensor:
-        """
-        Forward pass computing Eq. (2): log(X_ij) ≈ w_i^T * w_j + b_i + b_j
-        
-        Args:
-            i_idx: Indices of target words [batch_size]
-            j_idx: Indices of context words [batch_size]
-        
-        Returns:
-            predictions: Predicted log co-occurrence values [batch_size]
-        
-        Math:
-            pred_ij = W_i · W'_j + b_i + b'_j  (Eq. 2)
-        """
-        # Get embeddings for indices
-        w_i = self.W[i_idx]  # [batch, dim]
-        w_j = self.W_context[j_idx]  # [batch, dim]
-        
-        # Equation (2): w_i^T * w_j + b_i + b_j
-        dot_product = torch.sum(w_i * w_j, dim=1)  # [batch]
-        predictions = dot_product + self.b[i_idx] + self.b_context[j_idx]
-        
-        return predictions
+from implementations.models.glove import GloveModel, build_cooccurrence_matrix
 
+cooccurrence = build_cooccurrence_matrix(token_id_sentences, vocab_size, window_size=5)
+model = GloveModel(vocab_size=vocab_size, embedding_dim=100).to(device)
+history = model.fit(cooccurrence, epochs=5, learning_rate=0.05, batch_size=1024)
+embeddings = model.get_embeddings()  # w_i + w_tilde_i
+````
 
-class GloVeLoss(nn.Module):
-    """
-    GloVe loss function implementing Eq. (3).
-    
-    Section 2.3: The Weighting Function
-    J = Σ_ij f(X_ij) * (w_i^T * w_j + b_i + b_j - log(X_ij))^2
-    
-    where weighting function f is defined in Eq. (4):
-    f(x) = (x / x_max)^α  if x < x_max
-           1              if x ≥ x_max
-    """
-    
-    def __init__(self, x_max: float = 100.0, alpha: float = 0.75):
-        """
-        Initialize loss function.
-        
-        Args:
-            x_max: Clipping threshold for co-occurrence counts (Eq. 4)
-            alpha: Exponent in weighting function (Eq. 4)
-        """
-        super().__init__()
-        self.x_max = x_max
-        self.alpha = alpha
-    
-    def forward(
-        self,
-        predictions: torch.Tensor,
-        cooccurrence: torch.Tensor,
-    ) -> torch.Tensor:
-        """
-        Compute GloVe loss from Eq. (3).
-        
-        Eq. (3): L = Σ_ij f(X_ij) * (pred_ij - log(X_ij + 1))^2
-        
-        Args:
-            predictions: Model predictions from forward pass [batch]
-            cooccurrence: Co-occurrence counts [batch]
-        
-        Returns:
-            loss: Scalar loss value
-        """
-        # Prevent log(0)
-        target = torch.log(cooccurrence + 1)
-        
-        # Equation (4): Weighting function
-        # f(x) = min((x / x_max)^α, 1)
-        weights = torch.clamp((cooccurrence / self.x_max) ** self.alpha, max=1.0)
-        
-        # Equation (3): Weighted MSE loss
-        diff = predictions - target
-        weighted_mse = weights * (diff ** 2)
-        
-        return weighted_mse.mean()
-```
+`fit` uses AdaGrad internally. Set `batch_size=1` for the closest per-pair update behavior; larger batches are a practical throughput tradeoff for GPU experiments. 4. **Comments with variable names** → Copilot links code to paper variables (W, b, etc.)
 
-**Key Copilot Patterns Used:**
+**Step 3: Load text and build observed pairs**
 
-1. **Equation in docstring** → Copilot understands math and generates correct code
-2. **Type hints** → Copilot knows tensor shapes and suggests correct operations
-3. **Section references** → Copilot stays focused on paper's organization
-4. **Comments with variable names** → Copilot links code to paper variables (W, b, etc.)
-
-**Step 4: Add Data Loading Utilities**
-
-Create `implementations/utils/glove_data.py`:
+`load_glove_data` reads a plain-text file line by line, treats each nonempty line as a sentence, and returns `(data_loader, vocabulary)`. The dataset's sparse matrix can be passed directly to `model.fit`:
 
 ```python
-"""
-Data loading utilities for GloVe implementation.
-"""
+from implementations.utils.glove_data import load_glove_data
 
-import torch
-import numpy as np
-from collections import defaultdict
-from typing import Tuple, List
-from torch.utils.data import Dataset, DataLoader
-
-
-class CooccurrenceDataset(Dataset):
-    """
-    Dataset for GloVe co-occurrence pairs.
-    
-    Implements co-occurrence matrix construction from Eq. (1).
-    """
-    
-    def __init__(self, corpus: List[str], vocab_size: int, window_size: int = 5):
-        """
-        Build co-occurrence matrix from corpus.
-        
-        Eq. (1): X_ij = count(word_i, word_j in window)
-        
-        Args:
-            corpus: List of tokenized sentences
-            vocab_size: Vocabulary size
-            window_size: Context window size
-        """
-        # Copilot will generate implementation
+train_loader, vocabulary = load_glove_data(
+    "data/wikitext2_sample.txt",
+    window_size=5,
+    batch_size=1024,
+    min_count=2,
+    max_vocab_size=10000,
+)
+cooccurrence = train_loader.dataset.cooccurrence_matrix
 ```
 
-**Takeaway:** Write docstrings first with equations, Copilot fills in implementation. This avoids manual ChatGPT copy-paste entirely.
+Co-occurrence construction is currently CPU/Python work and stores observed pairs sparsely. Start with a small corpus sample; a GPU accelerates model updates, not text preprocessing or dictionary construction.
 
-**⏱️ This phase should take 40-50 min. Stop here - don't test locally yet.**
+**Step 4: Run the local smoke test**
+
+Run the GloVe sanity-check cell in `notebooks/glove.ipynb` before scaling data or changing model code. It checks forward output, loss and gradients, inverse-distance counts, and an AdaGrad training pass.
 
 ---
 
 ### Phase 3: Quick Local Test (Local - 10 minutes)
 
 **Goal:** Verify shapes and syntax errors ONLY. No real training.
+**Goal:** Run the actual GloVe smoke test before using a larger corpus.
 
-**In Jupyter/Notebook (quick check):**
+Open `notebooks/glove.ipynb` and run its sanity-check cell. It verifies the current `GloveModel` interface, positive co-occurrence counts, the loss and gradients, inverse-distance matrix values, and a short AdaGrad fit. The cell uses toy data; it is a correctness check, not an embedding-quality benchmark.
 
-```python
-# Cell 1: Quick sanity check
-import torch
-from implementations.models.glove import GloVeModel, GloVeLoss
-
-# Test shapes only
-model = GloVeModel(vocab_size=100, embedding_dim=50)
-loss_fn = GloVeLoss()
-
-# Dummy batch
-i_idx = torch.randint(0, 100, (32,))
-j_idx = torch.randint(0, 100, (32,))
-cooccurrence = torch.randint(1, 50, (32,)).float()
-
-# Forward pass
-pred = model(i_idx, j_idx)
-loss = loss_fn(pred, cooccurrence)
-
-print(f"✓ Predictions shape: {pred.shape} (expected: torch.Size([32]))")
-print(f"✓ Loss: {loss.item():.4f} (should be finite)")
-print(f"✓ Model parameters: {sum(p.numel() for p in model.parameters())}")
-```
-
-**Expected output:**
-```
-✓ Predictions shape: torch.Size([32]) (expected: torch.Size([32]))
-✓ Loss: 2.1234 (should be finite)
-✓ Model parameters: 10100
-```
-
-**If you see errors:**
-- ❌ Shape mismatch → Fix in `glove.py` forward()
-- ❌ NaN loss → Check weighting function or log(0) issue
-- ❌ Syntax error → Copilot or Python error
-
-**If all pass:** Move to Phase 4 ✓
+If imports fail, make sure the notebook kernel uses the project environment and that the repository root is on Python's import path. If CUDA is unavailable locally, run the GPU workflow below in Colab.
 
 ---
 
@@ -341,23 +153,24 @@ print(f"✓ Model parameters: {sum(p.numel() for p in model.parameters())}")
 
 ### Decision Matrix
 
-| Scenario | Local | Colab | Kaggle |
-|----------|-------|-------|--------|
-| **Understanding & coding** | ✅ Best | ❌ Overkill | ❌ Overkill |
-| **Debugging small issues** | ✅ Best | ⚠️ Okay | ❌ Too slow |
-| **Quick unit tests** | ✅ Best | ⚠️ Slow startup | ❌ Slow |
-| **Small dataset training** | ✅ Best | ✅ Good | ✅ Good |
-| **Large dataset training** | ❌ CPU slow | ✅ Free GPU | ✅ Free GPU |
-| **Hyperparameter tuning** | ❌ CPU slow | ✅ Recommend | ✅ Alternative |
-| **Multiple GPU runs** | ❌ No GPU | ✅ Good | ✅ Better (more resources) |
-| **Code sharing/presentation** | ❌ Hard | ✅ Easy | ✅ Very easy |
-| **Real-time debugging** | ✅ Best | ⚠️ Okay | ❌ Bad |
+| Scenario                      | Local       | Colab           | Kaggle                     |
+| ----------------------------- | ----------- | --------------- | -------------------------- |
+| **Understanding & coding**    | ✅ Best     | ❌ Overkill     | ❌ Overkill                |
+| **Debugging small issues**    | ✅ Best     | ⚠️ Okay         | ❌ Too slow                |
+| **Quick unit tests**          | ✅ Best     | ⚠️ Slow startup | ❌ Slow                    |
+| **Small dataset training**    | ✅ Best     | ✅ Good         | ✅ Good                    |
+| **Large dataset training**    | ❌ CPU slow | ✅ Free GPU     | ✅ Free GPU                |
+| **Hyperparameter tuning**     | ❌ CPU slow | ✅ Recommend    | ✅ Alternative             |
+| **Multiple GPU runs**         | ❌ No GPU   | ✅ Good         | ✅ Better (more resources) |
+| **Code sharing/presentation** | ❌ Hard     | ✅ Easy         | ✅ Very easy               |
+| **Real-time debugging**       | ✅ Best     | ⚠️ Okay         | ❌ Bad                     |
 
 ### Detailed Breakdown
 
 #### **Use LOCAL** (Your Machine)
 
 **When:**
+
 - Editing code/writing implementation
 - Debugging and iterating
 - Running unit tests
@@ -365,6 +178,7 @@ print(f"✓ Model parameters: {sum(p.numel() for p in model.parameters())}")
 - When internet is unstable
 
 **Setup:**
+
 ```bash
 # One-time setup
 python -m venv venv
@@ -376,37 +190,36 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 ```
 
 **Speed expectations:**
+
 - Model initialization: < 1 sec
 - 100 toy samples: < 5 sec
 - 1 epoch on small data: < 30 sec
 
 **Workflow:**
+
 ```python
-# notebooks/glove_local_test.ipynb
-# Quick development notebook - test logic only
+from implementations.models.glove import GloveModel
+from implementations.utils.glove_data import load_glove_data
 
-model = GloVeModel(vocab_size=1000, embedding_dim=50)
-optimizer = torch.optim.Adam(model.parameters())
-loss_fn = GloVeLoss()
-
-# Train for 1 epoch on 100 samples - verify training works
-for epoch in range(1):
-    for batch in small_dataloader:  # 100 samples
-        pred = model(batch['i'], batch['j'])
-        loss = loss_fn(pred, batch['cooccurrence'])
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        print(f"Loss: {loss.item()}")
+train_loader, vocabulary = load_glove_data("data/wikitext2_sample.txt")
+model = GloveModel(len(vocabulary), embedding_dim=50)
+history = model.fit(
+    train_loader.dataset.cooccurrence_matrix,
+    epochs=1,
+    batch_size=256,
+)
+print(f"Observed pairs: {len(train_loader.dataset)}")
+print(f"Epoch objective: {history[-1]:.4f}")
 ```
 
 **Expected time:** < 1 minute total
 
 ---
 
-#### **Use COLAB** (Google's Free GPU)
+#### **Use COLAB** (GPU availability varies)
 
 **When:**
+
 - Training on real datasets (> 10k samples)
 - Need GPU acceleration
 - Time per epoch > 5 minutes on CPU
@@ -416,30 +229,30 @@ for epoch in range(1):
 **Setup (5 minutes):**
 
 ```python
-# Cell 1: Mount Google Drive
-from google.colab import drive
-drive.mount('/content/drive')
-
-# Cell 2: Clone and setup repo
+# In Colab, select Runtime > Change runtime type > an available GPU accelerator.
 !git clone https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch.git
 %cd deep-learning-papers-pytorch
-!pip install -q -r requirements.txt
+!pip install -q datasets
 
-# Cell 3: Import and verify GPU
 import torch
-print(f"GPU Available: {torch.cuda.is_available()}")
-print(f"Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'}")
+if not torch.cuda.is_available():
+    raise RuntimeError("Enable a GPU runtime in Colab, then rerun this cell")
+print("GPU:", torch.cuda.get_device_name(0))
 ```
 
+Do not reinstall the full `requirements.txt` in Colab for this test: Colab already supplies CUDA-enabled PyTorch, and only the Hugging Face `datasets` client is needed to fetch the corpus.
+
 **Pros:**
-- ✅ Free GPU (12 GB Tesla K80 or better)
+
+- ✅ GPU access may be available at no cost (GPU model and availability vary)
 - ✅ Easy to share notebooks
 - ✅ Pre-installed ML libraries
 - ✅ Good for visualizations
-- ✅ 12 hours of continuous usage
+- ✅ Easy to reset and rerun a bounded experiment
 
 **Cons:**
-- ❌ Runtime resets after 12 hours (or 6-30 min idle)
+
+- ❌ Runtime, idle timeout, GPU model, and usage limits vary by account and availability
 - ❌ Slower file I/O (Google Drive)
 - ❌ Limited to 1 GPU
 - ❌ No local debugging with Copilot
@@ -447,61 +260,83 @@ print(f"Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else
 **Workflow:**
 
 ```python
-# Full training notebook for Colab
+# WikiText-2 raw: https://huggingface.co/datasets/Salesforce/wikitext
+# Review the dataset card for its current license and citation requirements.
+from datasets import load_dataset
+from pathlib import Path
+from implementations.models.glove import GloveModel
+from implementations.utils.glove_data import load_glove_data
 
-# Cell 1: Setup (see above)
+wiki = load_dataset("Salesforce/wikitext", "wikitext-2-raw-v1")
+sample_lines = wiki["train"][:2000]["text"]
+corpus_path = Path("/content/wikitext2_train_sample.txt")
+corpus_path.write_text("\n".join(sample_lines), encoding="utf-8")
 
-# Cell 2: Load data
-train_loader = get_glove_dataloader(
-    corpus_path='/content/drive/MyDrive/glove_data/',
-    batch_size=256
+# The co-occurrence builder is CPU/Python-based; start with this bounded sample.
+train_loader, vocabulary = load_glove_data(
+    corpus_path,
+    window_size=5,
+    batch_size=1024,
+    min_count=2,
+    max_vocab_size=10000,
+    shuffle=False,
 )
+cooccurrence = train_loader.dataset.cooccurrence_matrix
+print(f"Vocabulary: {len(vocabulary):,}; observed pairs: {cooccurrence._nnz():,}")
 
-# Cell 3: Initialize model
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = GloVeModel(vocab_size=10000, embedding_dim=100).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-loss_fn = GloVeLoss()
+# fit() uses AdaGrad internally and moves pair IDs/counts to the model device.
+device = torch.device("cuda")
+model = GloveModel(len(vocabulary), embedding_dim=100).to(device)
+history = model.fit(
+    cooccurrence,
+    epochs=3,
+    learning_rate=0.05,
+    batch_size=1024,
+)
+print("Summed epoch objectives:", [round(value, 3) for value in history])
 
-# Cell 4: Training loop
-epochs = 10
-for epoch in range(epochs):
-    for batch_idx, batch in enumerate(train_loader):
-        i_idx = batch['i'].to(device)
-        j_idx = batch['j'].to(device)
-        cooccurrence = batch['cooccurrence'].to(device)
-        
-        pred = model(i_idx, j_idx)
-        loss = loss_fn(pred, cooccurrence)
-        
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        
-        if batch_idx % 100 == 0:
-            print(f"Epoch {epoch}, Batch {batch_idx}, Loss: {loss.item():.4f}")
-    
-    # Save checkpoint
-    torch.save(model.state_dict(), f'glove_epoch_{epoch}.pt')
-    print(f"Epoch {epoch} done - Loss: {loss.item():.4f}")
-
-# Cell 5: Save final embeddings to Drive
-embeddings = model.W.detach().cpu().numpy()
-np.save('/content/drive/MyDrive/results/glove_embeddings.npy', embeddings)
-print("Embeddings saved!")
+# Save a portable CPU copy to the temporary Colab filesystem.
+artifact = {
+    "state_dict": {
+        name: tensor.detach().cpu()
+        for name, tensor in model.state_dict().items()
+    },
+    "vocabulary": vocabulary,
+    "embeddings": model.get_embeddings().detach().cpu(),
+}
+torch.save(artifact, "/content/glove_wikitext2_sample.pt")
+print("Saved /content/glove_wikitext2_sample.pt")
 ```
 
-**Expected time per epoch:** 5-30 minutes (depends on data size)
+Files in `/content` are removed when the runtime resets. To keep the checkpoint, mount Drive and save a copy there:
 
-**Cost:** FREE ✅
+```python
+from google.colab import drive
+drive.mount("/content/drive")
+torch.save(artifact, "/content/drive/MyDrive/glove_wikitext2_sample.pt")
+```
+
+To download it to your computer instead:
+
+```python
+from google.colab import files
+files.download("/content/glove_wikitext2_sample.pt")
+```
+
+This is a GPU pipeline smoke/learning run, not a paper reproduction. The sample limits CPU co-occurrence-building time and memory; full WikiText-2 or WikiText-103 can be substantially larger. `batch_size=1024` speeds GPU updates but differs from the paper's closest per-pair setting (`batch_size=1`). The returned epoch objective is a summed training loss and is not guaranteed to decrease monotonically.
+
+**Dataset:** [WikiText-2 raw on Hugging Face](https://huggingface.co/datasets/Salesforce/wikitext) (configuration `wikitext-2-raw-v1`; 36,718 training rows). WikiText-2 is a practical public test corpus, not the original GloVe training corpus. To reproduce the paper's reported results, use the paper's Wikipedia 2014 + Gigaword 5 corpus and match its preprocessing and evaluation setup.
+
+**Cost:** A free GPU runtime may be available; check current Colab account limits.
 
 ---
 
-#### **Use KAGGLE** (When Colab Fails)
+#### **Use KAGGLE** (Alternative GPU platform)
 
 **When:**
-- Need more GPU hours than Colab offers (20 hrs/week vs Colab 12 hrs)
-- Want better GPU options (P100, TPU)
+
+- Colab GPU access is unavailable or another hosted GPU environment is preferred
+- Want to compare the GPU accelerators currently offered by the platform
 - Colab session keeps crashing
 - Need multiple GPU experiments in parallel
 
@@ -521,17 +356,19 @@ kaggle datasets upload-dir --folder-name deep-learning-papers-pytorch --path .
 4. Create new notebook in Kaggle UI, link to your dataset
 
 **Pros:**
-- ✅ More free GPU hours (20 hrs/week)
-- ✅ Better GPU options available
+
+- ✅ A separate hosted-GPU option; quotas and hardware vary
+- ✅ GPU choices may differ from Colab
 - ✅ Large public datasets integrated
 - ✅ Good for competition-style work
 - ✅ Can run multiple notebooks simultaneously
 
 **Cons:**
+
 - ❌ Slower disk I/O initially
 - ❌ UI is less polished than Colab
 - ❌ More steps to set up
-- ❌ 20 hr/week limit (Colab is 12 hrs continuous)
+- ❌ Availability, session duration, and quotas can change
 
 **Workflow (similar to Colab):**
 
@@ -543,7 +380,7 @@ os.chdir('/kaggle/working')
 # Cell 2: Clone repo
 !git clone https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch.git
 %cd deep-learning-papers-pytorch
-!pip install -q -r requirements.txt
+!pip install -q datasets
 
 # Rest is same as Colab...
 ```
@@ -556,37 +393,37 @@ os.chdir('/kaggle/working')
 START: Want to implement a paper
 
     ↓
-    
+
 Do you have GPU? (nvidia-smi works)
     → YES: Use LOCAL (fastest feedback loop)
     → NO: Continue
-    
+
     ↓
-    
+
 Is your model/data training in < 2 minutes?
     → YES: Use LOCAL with CPU (acceptable)
     → NO: Continue
-    
+
     ↓
-    
+
 Do you need GPU acceleration?
     → YES: Continue
     → NO: Use LOCAL
-    
+
     ↓
-    
+
 First time training this paper?
-    → YES: Use COLAB (12 hrs free, sufficient for learning)
+    → YES: Use COLAB if a GPU runtime is available
     → NO: Continue
-    
+
     ↓
-    
+
 Do you need to run 5+ experiments in parallel?
-    → YES: Use KAGGLE (20 hrs/week, multiple notebooks)
+    → YES: Compare current Colab/Kaggle quotas and choose an available GPU
     → NO: Use COLAB
-    
+
     ↓
-    
+
 END: You have your tool selected ✓
 ```
 
@@ -594,7 +431,7 @@ END: You have your tool selected ✓
 
 ## End-to-End Paper Implementation
 
-### Complete Example: GloVe from Scratch
+### Complete Example: GloVe Implementation and GPU Test
 
 **Total time: 2.5-3 hours per paper**
 
@@ -613,49 +450,53 @@ touch docs/glove_notes.md
 # GloVe Implementation Notes
 
 ## Paper Summary
+
 - **Title:** GloVe: Global Vectors for Word Representation
 - **Year:** 2014
 - **Authors:** Pennington, Socher, Manning
 - **Link:** https://nlp.stanford.edu/projects/glove/
 
 ## Key Problem
+
 Existing word embedding methods (Word2Vec) capture local context but ignore global corpus statistics. GloVe combines both.
 
 ## Architecture Overview
 ```
+
 Text Corpus
-    ↓
-Build Co-occurrence Matrix X
-    ↓
-Initialize Embeddings W, W', b, b'
-    ↓
-Loss = Σ_ij f(X_ij) * (W_i·W'_j + b_i + b'_j - log(X_ij))²
-    ↓
-SGD Optimization
-    ↓
-Final Embeddings: W (discard W')
+↓
+Build distance-weighted co-occurrence matrix X
+↓
+Learn target/context vectors W, W*tilde and biases b, b_tilde
+↓
+Loss = Σ*{i,j:X_ij>0} f(X_ij) \* (W_i·W_tilde_j + b_i + b_tilde_j - log(X_ij))²
+↓
+AdaGrad optimization
+↓
+Final embeddings: W + W_tilde (or either table separately)
+
 ```
 
 ## Key Equations
-- **Eq. (1):** X_ij = count(word_i, word_j in context)
-- **Eq. (2):** log(X_ij) ≈ w_i^T * w_j + b_i + b_j
-- **Eq. (3):** J = Σ_ij f(X_ij) * (w_i^T * w_j + b_i + b_j - log(X_ij))^2
-- **Eq. (4):** f(x) = (x/x_max)^α if x < x_max, else 1
+- **Co-occurrence:** X_ij is the distance-weighted count of context word j around target word i.
+- **Fitted relationship:** w_i^T * w_tilde_j + b_i + b_tilde_j ≈ log(X_ij).
+- **Objective (paper Eq. 8):** J = Σ_{i,j:X_ij>0} f(X_ij) * (w_i^T * w_tilde_j + b_i + b_tilde_j - log(X_ij))².
+- **Weight (paper Eq. 9):** f(x) = (x/x_max)^α for x < x_max, otherwise 1.
 
 ## Hyperparameters from Paper
 - Embedding dimension: d = 50, 100, 200, 300
-- Context window: 10 words (5 each side)
+- Context radius: `window_size=10` includes up to 10 positions on each side
 - x_max (clipping): 100
 - α (weighting exponent): 0.75
 - Learning rate: 0.05
 - Optimizer: AdaGrad
 
 ## Implementation Plan
-1. [ ] Co-occurrence matrix builder
-2. [ ] GloVe model (W, W', b, b' embeddings)
-3. [ ] Loss function with weighting
-4. [ ] Training loop
-5. [ ] Evaluation on analogy tasks
+1. [x] Inverse-distance co-occurrence builder and text loader
+2. [x] Separate target/context vectors and biases
+3. [x] Weighted objective and AdaGrad fit method
+4. [x] Toy-data smoke test in `notebooks/glove.ipynb`
+5. [ ] Evaluation on word similarity/analogy benchmarks
 ```
 
 **Read paper:** 20 minutes  
@@ -665,83 +506,15 @@ Final Embeddings: W (discard W')
 
 #### **Hour 0.5-1.5: Implementation (LOCAL)**
 
-**Create model file:**
+**Review the current model/data files:**
 
-```bash
-cp implementations/models/template.py implementations/models/glove.py
-```
-
-**Implement in VS Code (following Copilot patterns above):**
-
-- Add header with equations: 5 min
-- Implement GloVeModel class: 15 min
-- Implement GloVeLoss class: 10 min
-- Add data utilities: 15 min
-- Quick test: 5 min
-
-**Total:** ~50 minutes
+The implementation already exists; do not copy over it from the template. Review `implementations/models/glove.py`, `implementations/utils/glove_data.py`, and `notebooks/glove.ipynb`. Run the toy-data smoke test, then use the Colab sample workflow below for a GPU run.
 
 ---
 
 #### **Hour 1.5-2.5: Experiments (COLAB)**
 
-**Create notebook on Colab:**
-
-```python
-# Cell 1: Setup
-from google.colab import drive
-drive.mount('/content/drive')
-
-!git clone https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch.git
-%cd deep-learning-papers-pytorch
-!pip install -q -r requirements.txt
-
-import torch
-from implementations.models.glove import GloVeModel, GloVeLoss
-import numpy as np
-
-device = torch.device('cuda')
-print(f"Device: {torch.cuda.get_device_name(0)}")
-
-# Cell 2: Load data (or create synthetic for testing)
-# Download corpus or create toy corpus
-
-# Cell 3: Build co-occurrence matrix
-# (This is usually bottleneck - do once, save)
-
-# Cell 4: Training loop
-model = GloVeModel(vocab_size=10000, embedding_dim=100).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-loss_fn = GloVeLoss()
-
-for epoch in range(5):
-    total_loss = 0
-    for batch in train_loader:
-        i_idx = batch['i'].to(device)
-        j_idx = batch['j'].to(device)
-        cooccurrence = batch['cooccurrence'].to(device)
-        
-        pred = model(i_idx, j_idx)
-        loss = loss_fn(pred, cooccurrence)
-        
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        
-        total_loss += loss.item()
-    
-    print(f"Epoch {epoch}: Loss = {total_loss / len(train_loader):.4f}")
-    torch.save(model.state_dict(), f'/content/drive/MyDrive/glove_epoch_{epoch}.pt')
-
-# Cell 5: Evaluate on word analogies or similarity tasks
-# (Optional, depending on paper)
-
-# Cell 6: Save results
-embeddings = model.W.detach().cpu().numpy()
-np.save('/content/drive/MyDrive/glove_embeddings.npy', embeddings)
-```
-
-**Expected time:** 45 minutes (actual training depends on data size)
+Use the Colab setup and WikiText-2 raw sample workflow in the **Use COLAB** section above. It downloads a bounded training sample, builds co-occurrence pairs, trains the model on CUDA with AdaGrad, and saves the vocabulary and combined embeddings. The first pass through the corpus builds counts on CPU; GPU time is spent in the model updates.
 
 ---
 
@@ -759,45 +532,52 @@ touch docs/glove_summary.md
 # GloVe Implementation Summary
 
 ## What I Implemented
+
 - Co-occurrence matrix builder from tokenized corpus
 - GloVe model with dual embeddings (W and W')
-- Weighted MSE loss function
-- Training loop with learning rate schedule
+- Weighted squared-log-count objective
+- AdaGrad fit method
 
 ## Key Results
-- Training on 100k word pairs: ~5 min on Colab GPU
-- Embedding dimension: 100
-- Final training loss: 0.8234
-- Word analogy accuracy: ~78% (expected ~75-80%)
+
+Record measured results for the exact dataset sample and settings used:
+
+- Dataset/configuration and number of source lines:
+- Vocabulary size and observed co-occurrence pairs:
+- Embedding dimension, context radius, epochs, and batch size:
+- Runtime/device and summed training objective per epoch:
+- Evaluation benchmark and score (only after running evaluation):
 
 ## Implementation Challenges
-1. **Numerical stability:** Added epsilon to log() to prevent -inf
-2. **Co-occurrence sparsity:** Only store non-zero pairs in sparse format
-3. **Weighting function:** Correctly implementing power function f(x)
+
+1. **Zero counts:** Train only on observed positive pairs so `log(X_ij)` is defined.
+2. **Co-occurrence sparsity:** Only observed pairs are stored; pair construction currently runs on CPU.
+3. **Weighting function:** Apply `f(X_ij)` to the squared residual using the paper's `alpha` and `x_max`.
 
 ## Code Organization
-- `implementations/models/glove.py`: Model + Loss
+
+- `implementations/models/glove.py`: Model, objective, co-occurrence builder
 - `implementations/utils/glove_data.py`: Data loading
-- `notebooks/glove_learning.ipynb`: Training notebook
+- `notebooks/glove.ipynb`: Toy-data sanity check
 
 ## Key Insights
-- Weighting function is CRUCIAL - it prevents high co-occurrence pairs from dominating
-- Dual embeddings (W and W') capture bidirectional relationships better than single embedding
-- This approach is more stable than Word2Vec Skip-gram with large corpora
+
+- The weighting function reduces the influence of very frequent word pairs.
+- Target and context embeddings represent separate roles in the fitted model.
+- The toy smoke test checks implementation behavior, not semantic quality.
 
 ## Comparison with Paper
-| Metric | Paper | Mine |
-|--------|-------|------|
-| Dim 100 | 0.82 loss | 0.8234 loss |
-| WS353 similarity | 0.87 | 0.84 |
-| RW similarity | 0.35 | 0.33 |
+
+Do not compare summed training objectives across different corpus sizes, vocabularies, or batch sizes. Compare embedding quality only after using the same evaluation benchmark and protocol as the paper.
 
 ## What I'd Do Differently
-1. Use sparse co-occurrence matrices from day 1 (saves 80% memory)
-2. Implement warmup learning rate schedule
-3. Add context window size comparison experiments
+
+1. Profile CPU time and memory in co-occurrence construction before increasing the corpus sample.
+2. Add evaluation on a standard word-similarity or analogy benchmark.
+3. Compare context radii with the same vocabulary and evaluation protocol.
 
 ## Next Steps
+
 - Implement dynamic context weighting
 - Test on different corpus sizes
 - Compare with fastText vectors
@@ -816,14 +596,14 @@ Day 1:
   00:30 - 01:20: Implement model (LOCAL + Copilot)
   01:20 - 01:30: Quick test shapes (LOCAL)
   01:30 - 01:40: Create Colab notebook
-  
+
 Day 1-2 (async):
   01:40 - 02:30: Training on Colab (GPU)
-  
+
 Day 2:
   02:30 - 02:45: Write summary (LOCAL)
   02:45 - 03:00: Commit to GitHub (LOCAL)
-  
+
 TOTAL: ~3 hours + overnight async training
 ```
 
@@ -834,27 +614,28 @@ TOTAL: ~3 hours + overnight async training
 ### Tip 1: Equation-First Development
 
 **❌ BAD: Ask ChatGPT to write code**
+
 ```
 "Write PyTorch code for GloVe model"
 → Get generic code, copy-paste into notebook, manually fix, waste 30 min
 ```
 
 **✅ GOOD: Write docstring with equation, let Copilot autocomplete**
+
 ```python
-def forward(self, i_idx, j_idx):
+def forward(self, target_ids, context_ids):
     """
-    Equation (2): log(X_ij) ≈ w_i^T * w_j + b_i + b_j
-    
+    Predict w_i.T @ w_tilde_j + b_i + b_tilde_j for each pair.
+
     Args:
-        i_idx: Target word indices [batch]
-        j_idx: Context word indices [batch]
-    
+        target_ids: Target word indices [batch]
+        context_ids: Context word indices [batch]
+
     Returns:
         predictions: log co-occurrence values [batch]
     """
-    # Copilot generates: w_i = self.W[i_idx]; w_j = self.W_context[j_idx]
-    #                   dot_product = torch.sum(w_i * w_j, dim=1)
-    #                   return dot_product + self.b[i_idx] + self.b_context[j_idx]
+    # The implemented GloveModel uses target_embeddings/context_embeddings
+    # and target_biases/context_biases for this equation.
 ```
 
 **Benefit:** Code always matches equations in comments
@@ -866,25 +647,15 @@ def forward(self, i_idx, j_idx):
 **Example: Co-occurrence Matrix**
 
 ```python
-def build_cooccurrence_matrix(corpus, window_size):
-    """
-    Equation (1): X_ij = count(word_i, word_j in window)
-    
-    Section 2.2: Co-occurrence Statistics
-    For each word pair appearing in the context window,
-    increment their co-occurrence count.
-    """
-    # Copilot understands from equation and generates:
-    cooccurrence = defaultdict(lambda: defaultdict(int))
-    
-    for sentence in corpus:
-        for i, word_i in enumerate(sentence):
-            for j in range(max(0, i - window_size), min(len(sentence), i + window_size + 1)):
-                if i != j:
-                    word_j = sentence[j]
-                    cooccurrence[word_i][word_j] += 1
-    
-    return cooccurrence
+from implementations.models.glove import build_cooccurrence_matrix
+
+# Sentences are sequences of integer token IDs. Each occurrence contributes
+# inverse-distance weight, and the returned matrix is sparse COO.
+cooccurrence = build_cooccurrence_matrix(
+    corpus=token_id_sentences,
+    vocab_size=len(vocabulary),
+    window_size=10,
+)
 ```
 
 ---
@@ -908,17 +679,12 @@ def compute_loss(
 ### Tip 4: Section-Based Comments
 
 ```python
-# Section 2.1: Initialization
-# Initialize word vectors and context vectors as random matrices
-self.W = nn.Parameter(torch.randn(vocab_size, embedding_dim) * scale)
-
-# Section 2.2: Forward Pass
-# Compute dot product between word pairs (Eq. 2)
-dot_product = torch.sum(self.W[i] * self.W_context[j], dim=1)
-
-# Section 2.3: Loss Function
-# Apply weighting function to prevent over-emphasis on high co-occurrence
-weights = torch.clamp((cooccurrence / x_max) ** alpha, max=1.0)
+# GloVe fitted relationship for observed pair (i, j):
+prediction = (
+    (self.target_embeddings(target_ids) * self.context_embeddings(context_ids)).sum(-1)
+    + self.target_biases(target_ids).squeeze(-1)
+    + self.context_biases(context_ids).squeeze(-1)
+)
 ```
 
 ---
@@ -935,13 +701,13 @@ def forward(self, x):
 # Good: Decomposed with clear steps
 def _compute_attention(self, q, k, v):
     """Equation (7): Attention(Q, K, V)"""
-    
+
 def _apply_layer_norm(self, x):
     """Equation (4): LayerNorm(x)"""
-    
+
 def _feed_forward(self, x):
     """Equation (5): MLP(x)"""
-    
+
 def forward(self, x):
     # Chain operations
     x = self._apply_layer_norm(x)
@@ -961,12 +727,12 @@ def forward(self, x):
 
 For typical NLP papers:
 
-| Dataset | Local CPU | Local GPU | Colab GPU | Kaggle GPU |
-|---------|-----------|-----------|-----------|-----------|
-| **Tiny (1k pairs)** | 1 sec | <1 sec | 5 sec | 5 sec |
-| **Small (100k pairs)** | 5 min | 10 sec | 1 min | 45 sec |
-| **Medium (1M pairs)** | 50 min | 2 min | 5 min | 3 min |
-| **Large (10M+ pairs)** | ❌ Impractical | 20 min | 30 min | 20 min |
+| Dataset                | Local CPU      | Local GPU | Colab GPU | Kaggle GPU |
+| ---------------------- | -------------- | --------- | --------- | ---------- |
+| **Tiny (1k pairs)**    | 1 sec          | <1 sec    | 5 sec     | 5 sec      |
+| **Small (100k pairs)** | 5 min          | 10 sec    | 1 min     | 45 sec     |
+| **Medium (1M pairs)**  | 50 min         | 2 min     | 5 min     | 3 min      |
+| **Large (10M+ pairs)** | ❌ Impractical | 20 min    | 30 min    | 20 min     |
 
 ### Strategy by Scale
 
@@ -988,28 +754,31 @@ for epoch in range(10):
 #### **Small Data (10k - 500k pairs)**: LOCAL GPU or COLAB
 
 **Decision:**
+
 - Have GPU locally? → Use LOCAL (no upload time)
 - No GPU locally? → Use COLAB (free GPU, ~1 min per epoch)
 
 ```python
 # Local GPU
-model = GloVeModel(...).to('cuda')
+model = GloveModel(...).to('cuda')
 
 # OR Colab
-model = GloVeModel(...).to(device)  # device = 'cuda'
+model = GloveModel(...).to(device)  # device = 'cuda'
+history = model.fit(cooccurrence, epochs=3, batch_size=1024)
 ```
 
 ---
 
 #### **Medium Data (500k - 5M pairs)**: COLAB or KAGGLE
 
-**Colab pros:** 12 hours free, easy setup, no auth needed  
-**Kaggle pros:** 20 hours/week, better GPU options
+**Colab pros:** simple setup; GPU access depends on current availability and account limits  
+**Kaggle pros:** a separate hosted-GPU option with its own current quotas
 
 ```python
 # Both follow same pattern
 device = torch.device('cuda')
-model = GloVeModel(...).to(device)
+model = GloveModel(...).to(device)
+history = model.fit(cooccurrence, epochs=5, batch_size=1024)
 
 # Colab: Save to Google Drive periodically
 torch.save(model.state_dict(), '/content/drive/MyDrive/checkpoint.pt')
@@ -1020,17 +789,9 @@ torch.save(model.state_dict(), '/kaggle/working/checkpoint.pt')
 
 ---
 
-#### **Large Data (5M+ pairs)**: KAGGLE + Advanced
+#### **Large Data (5M+ pairs)**: Profile before scaling
 
-**Use multiple GPUs (if available):**
-
-```python
-# Kaggle Notebook settings: GPU P100 (2 available)
-if torch.cuda.device_count() > 1:
-    model = nn.DataParallel(model)
-
-model = model.to(device)
-```
+The current `GloveModel.fit` method manages its own optimizer loop on one device. Wrapping the model in `nn.DataParallel` does not distribute that internal loop. For this implementation, first reduce the text sample, vocabulary, or context radius; distributed training would require a separate explicit training loop.
 
 **Or use distributed training (Advanced - avoid if just learning):**
 
@@ -1043,18 +804,18 @@ model = model.to(device)
 
 ### Cost Analysis
 
-| Platform | Cost | Monthly Limit |
-|----------|------|---|
-| **Local (own GPU)** | $200-2000 (one-time) | ∞ |
-| **Local (CPU)** | $0 | ∞ |
-| **Colab Free** | $0 | 12 hrs continuous |
-| **Colab Pro** | $9.99 | 100 hrs/month + better GPU |
-| **Kaggle** | $0 | 20 hrs/week |
+| Platform             | Cost                       | Monthly Limit                    |
+| -------------------- | -------------------------- | -------------------------------- |
+| **Local (own GPU)**  | $200-2000 (one-time)       | ∞                                |
+| **Local (CPU)**      | $0                         | ∞                                |
+| **Colab Free**       | $0                         | Availability and limits vary     |
+| **Colab paid plans** | Check current pricing      | Limits and hardware vary by plan |
+| **Kaggle**           | $0 for available free tier | Current account quotas apply     |
 
 **Recommendation for learning:**
-- Start with FREE options (Colab + Kaggle)
+
 - No need to pay unless you run production models
-- Colab Pro ($10/mo) only if you need more continuous hours
+- Check each platform's current pricing, GPU availability, and usage limits before choosing a paid plan
 
 ---
 
@@ -1144,7 +905,8 @@ notebooks/
 
 ```python
 # Cell 1: Imports
-from implementations.models.glove import GloVeModel, GloVeLoss
+from implementations.models.glove import GloveModel, build_cooccurrence_matrix
+from implementations.utils.glove_data import load_glove_data
 
 # Cell 2: Paper summary (Markdown)
 # Paper: GloVe
