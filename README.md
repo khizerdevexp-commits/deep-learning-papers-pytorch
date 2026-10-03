@@ -1,505 +1,205 @@
-# Deep Learning Papers in PyTorch
+# Physics-Informed ML: Papers and Roadmap
 
-<div align="center">
+A practical roadmap for building industry-ready AI-for-science skills through Physics-Informed Neural Networks (PINNs), failure-mode analysis, neural operators, and publication-quality project work.
 
-[![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Open Issues](https://img.shields.io/github/issues/khizerdevexp-commits/deep-learning-papers-pytorch)](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/issues)
-[![Last Commit](https://img.shields.io/github/last-commit/khizerdevexp-commits/deep-learning-papers-pytorch)](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/commits/main)
-
-A structured repository for implementing research papers from scratch in PyTorch with a focus on **NLP**, **Word Embeddings**, and **Computer Vision**.
-
-[Quick Start](#-quick-start) • [Workflow](#-implementation-workflow) • [Papers](#-recommended-papers) • [Documentation](#-documentation) • [Contributing](#-contributing)
-
-</div>
+This repository is organized around a clear progression from foundational PINN implementations to operator learning and real-world scientific ML research.
 
 ---
 
 ## Overview
 
-This repository bridges the gap between research papers and practical implementations. Each paper is translated into clear, modular, and reusable PyTorch code while preserving the original methodological intent.
+This roadmap is designed for a hands-on, reproducible, and publication-oriented learning path in physics-informed machine learning. The goal is not just to read papers, but to implement them from scratch, compare against classical baselines, and produce work with clear evidence and measurable results.
 
-**Key Features:**
-- 📝 Well-documented implementations with equation references
-- 🔄 Reusable components (attention, embeddings, losses)
-- 📊 Jupyter notebooks for experimentation and visualization
-- ⚙️ Configuration-driven experiments
-- 📚 Comprehensive summaries and learning notes
-- ✅ Checklist-based workflow for consistent development
+Each phase ends with something you can publish, because public, verifiable work is what gets you hired. Verify paper titles and details against arXiv or Google Scholar as you go.
 
 ---
 
-## 📋 Table of Contents
+## Part 1: Papers List (in implementation order)
 
-- [Repository Structure](#-repository-structure)
-- [Quick Start](#-quick-start)
-- [Implementation Workflow](#-implementation-workflow)
-- [Code Examples](#-code-examples)
-- [Recommended Papers](#-recommended-papers)
-- [Documentation](#-documentation)
-- [Contributing](#-contributing)
-- [License](#-license)
+### Phase 1: Core PINNs
 
----
+1. Raissi, Perdikaris, Karniadakis (2019). Physics-informed neural networks.
+   - The original paper.
+   - Reproduce Burgers' equation (forward) and an inverse problem.
 
-## 📁 Repository Structure
+2. Lu et al. (2021). DeepXDE.
+   - Read the design, then compare your code against it.
 
-```
-deep-learning-papers-pytorch/
-├── papers/                          # Original PDF research papers
-│   ├── glove.pdf
-│   ├── attention_is_all_you_need.pdf
-│   └── ...
-│
-├── implementations/                 # Reusable, production-ready code
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── glove.py                # GloVe model implementation
-│   │   ├── word2vec.py             # Word2Vec (CBOW & Skip-gram)
-│   │   ├── transformer.py          # Transformer architecture
-│   │   └── ...
-│   │
-│   ├── layers/
-│   │   ├── __init__.py
-│   │   ├── attention.py            # Attention mechanisms
-│   │   ├── embeddings.py           # Embedding layers
-│   │   └── ...
-│   │
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   ├── data.py                 # Data loading & preprocessing
-│   │   ├── training.py             # Training loops, evaluation
-│   │   ├── visualization.py        # Plotting & analysis tools
-│   │   └── constants.py            # Shared constants
-│   │
-│   └── losses/
-│       ├── __init__.py
-│       └── custom_losses.py        # Paper-specific loss functions
-│
-├── notebooks/                       # Jupyter notebooks - Learning & Experimentation
-│   ├── glove_learning.ipynb
-│   ├── transformer_learning.ipynb
-│   └── ...
-│
-├── configs/                         # Configuration files (JSON/YAML)
-│   ├── glove_config.json
-│   ├── transformer_config.json
-│   └── ...
-│
-├── data/                           # Small datasets for experimentation
-│   ├── sample_text.txt
-│   └── vocab.pkl
-│
-├── results/                        # Model checkpoints & outputs
-│   ├── glove/
-│   │   ├── model.pt
-│   │   └── embeddings.npy
-│   └── ...
-│
-├── docs/                           # Learning notes & paper summaries
-│   ├── glove_summary.md
-│   ├── transformer_summary.md
-│   └── ...
-│
-├── requirements.txt
-├── setup.py
-├── LICENSE
-└── .gitignore
-```
+3. Baydin et al. (2018). Automatic differentiation in machine learning: a survey.
+   - Know how the higher-order derivatives in your loss actually work.
+
+### Phase 2: Why PINNs Fail, and Fixes
+
+4. Krishnapriyan et al. (2021). Characterizing possible failure modes in physics-informed neural networks.
+5. Wang, Teng, Perdikaris (2021). Understanding and mitigating gradient flow pathologies in PINNs.
+6. Wang, Yu, Perdikaris (2022). When and why PINNs fail to train: a neural tangent kernel perspective.
+7. Tancik et al. (2020). Fourier features let networks learn high-frequency functions in low dimensional domains.
+8. Wang et al. (2023). An expert's guide to training physics-informed neural networks.
+   - The most practical paper in this list.
+
+### Phase 3: Neural Operators
+
+9. Lu et al. (2021). DeepONet. Learning nonlinear operators.
+10. Li et al. (2021). Fourier Neural Operator for parametric partial differential equations.
+    - Implement FNO from scratch, including the spectral convolution layer.
+11. Wang, Wang, Perdikaris (2021). Learning the solution operator of parametric PDEs with physics-informed DeepONets.
+12. Kovachki et al. (2023). Neural operator: learning maps between function spaces.
+    - The theory behind the operator approach.
+
+### Phase 4: Benchmarks and Honest Evaluation
+
+13. Takamoto et al. (2022). PDEBench.
+14. Grossmann et al. (2024). Can physics-informed neural networks beat the finite element method?
+15. Hao et al. (2023). PINNacle. A PINN benchmark.
+
+### Phase 5: Industry-Relevant Frontier
+
+16. Brandstetter et al. (2022). Message passing neural PDE solvers.
+17. Pathak et al. (2022) and Lam et al. (2023). FourCastNet and GraphCast.
+    - Weather models that attract industry attention.
+18. Wu et al. (2024) and Herde et al. (2024). Transolver and Poseidon.
+    - Optional: PDE foundation models.
+
+### Surveys to Read Alongside
+
+- Karniadakis et al. (2021). Physics-informed machine learning (Nature Reviews Physics).
+- Cuomo et al. (2022). Scientific machine learning through physics-informed neural networks.
 
 ---
 
-## 🚀 Quick Start
+## Part 2: Roadmap (about 6 months)
 
-### Prerequisites
+Mark items with `[x]` as you complete them.
 
-- Python 3.10 or higher
-- Git
-- Virtual environment tool (venv, conda, etc.)
+### Weeks 1-4: PINN Fundamentals (Phase 1)
 
-### Installation
+Watch first:
+- Maziar Raissi lectures
+- Ben Moseley PINN talks
+- Steve Brunton (physics-informed ML)
+- Karpathy Zero to Hero (habits)
 
-**1. Clone the repository**
+- [ ] Implement a PINN in PyTorch from scratch for the 1D heat equation
+- [ ] Implement a PINN for Burgers' equation
+- [ ] Implement an inverse problem (infer a parameter from data)
+- [ ] Write a classical baseline for each (finite differences or spectral, NumPy/SciPy)
+- [ ] Deliverable: repo with clean code, plots, and a short write-up comparing PINN and classical accuracy and runtime
 
-```bash
-git clone https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch.git
-cd deep-learning-papers-pytorch
-```
+### Weeks 5-9: Failure Modes and Fixes (Phase 2)
 
-**2. Create and activate a virtual environment**
+Watch first:
+- Ben Moseley (when PINNs work and fail)
+- Paris Perdikaris (gradient pathology and NTK talks)
+- Machine Learning & Simulation (JAX)
 
-```bash
-# Using venv
-python -m venv .venv
-source .venv/bin/activate           # On Linux/macOS
-.venv\Scripts\activate              # On Windows
+- [ ] Reproduce a failure case (e.g., high-wavenumber convection from Krishnapriyan)
+- [ ] Fix it with loss balancing, Fourier features, or curriculum training
+- [ ] Learn JAX by reimplementing one experiment in it
+- [ ] Deliverable: blog post, "Why my PINN failed and what fixed it," with ablations
 
-# Or using conda
-conda create -n paper-impl python=3.10
-conda activate paper-impl
-```
+### Weeks 10-15: Neural Operators (Phase 3)
 
-**3. Install dependencies**
+Watch first:
+- Zongyi Li and Anima Anandkumar (FNO talks)
+- Steve Brunton (neural operators)
+- Perdikaris (physics-informed DeepONets)
 
-```bash
-pip install -r requirements.txt
-```
+- [ ] Implement DeepONet from scratch on Burgers and Darcy flow
+- [ ] Implement FNO from scratch
+- [ ] Build a physics-informed variant
+- [ ] Deliverable: benchmark across PINN, DeepONet, FNO, and a classical solver (accuracy, speed, data needs, generalization)
 
-**4. (Optional) Install in development mode**
+### Weeks 16-21: Your Original Project (Phases 4-5)
 
-```bash
-pip install -e .
-```
+Watch first:
+- NeurIPS/ICML ML-for-science workshop recordings
+- Nathan Kutz, Chris Rackauckas (SciML)
 
-### Verify Installation
+- [ ] Pick one question from your own physics background (e.g., does enforcing a conservation law improve long-time stability?)
+- [ ] Test it properly using PDEBench data, reporting results honestly, including where ML loses to classical solvers
+- [ ] Deliverable: arXiv preprint or submission to an ML-for-science workshop (NeurIPS or ICML)
 
-```python
-import torch
-from implementations.models import glove
+### Weeks 22-26: Production Skills and Job Search
 
-model = glove.GloVe(vocab_size=10000, embedding_dim=300)
-print(f"Model created successfully: {model}")
-```
+Watch first:
+- NVIDIA Developer (PhysicsNeMo, AI-for-science talks)
 
----
-
-## 🔄 Implementation Workflow
-
-Each paper follows a consistent, structured approach:
-
-### Step 1: Add the Paper
-
-Save the original PDF in the `papers/` directory.
-
-```bash
-papers/your_paper.pdf
-```
-
-### Step 2: Create Implementation
-
-Create a new module in `implementations/models/` with docstring-guided structure.
-
-```bash
-implementations/models/your_paper.py
-```
-
-### Step 3: Create Learning Notebook
-
-Add experiments and visualizations in a Jupyter notebook.
-
-```bash
-notebooks/your_paper_learning.ipynb
-```
-
-### Step 4: Document the Paper
-
-Write a technical summary in `docs/`.
-
-```bash
-docs/your_paper_summary.md
-```
-
-### Suggested Workflow Timeline
-
-| Phase | Time | Activity |
-|-------|------|----------|
-| **Review** | 20 min | Read abstract, key equations, diagrams from PDF |
-| **Implement** | 50 min | Code model in `implementations/models/` with Copilot |
-| **Experiment** | 40 min | Test in notebook, add visualizations |
-| **Document** | 10 min | Write summary, commit with meaningful message |
+- [ ] Learn industry tooling: PhysicsNeMo, the neuraloperator library, mixed precision, multi-GPU training, deployment
+- [ ] Contribute a fix or feature to an open-source library such as DeepXDE or neuraloperator
+- [ ] Start applying from about week 16, not week 26; interviews are feedback
 
 ---
 
-## 💻 Code Examples
+## Part 3: Practical Notes
 
-### Basic Model Implementation
-
-```python
-"""
-GloVe: Global Vectors for Word Representation
-Reference: https://nlp.stanford.edu/pubs/glove.pdf
-Citation: Pennington et al., 2014
-
-Key Equations:
-    Eq. 1: w_i · w_j + b_i + b_j = log(X_ij)
-    Eq. 2: L = Σ f(X_ij) * (w_i · w_j + b_i + b_j - log(X_ij))^2
-"""
-
-import torch
-import torch.nn as nn
-from typing import Optional
-
-class GloVe(nn.Module):
-    """
-    GloVe embedding model.
-    
-    Args:
-        vocab_size (int): Size of the vocabulary
-        embedding_dim (int): Dimension of word embeddings
-        context_dim (int): Dimension of context embeddings
-    """
-    
-    def __init__(
-        self, 
-        vocab_size: int, 
-        embedding_dim: int, 
-        context_dim: int = 300
-    ):
-        super().__init__()
-        self.vocab_size = vocab_size
-        self.embedding_dim = embedding_dim
-        
-        # Section 3.1: Word and context embeddings
-        self.word_embed = nn.Embedding(vocab_size, embedding_dim)
-        self.context_embed = nn.Embedding(vocab_size, context_dim)
-        
-        # Bias terms
-        self.word_bias = nn.Parameter(torch.zeros(vocab_size))
-        self.context_bias = nn.Parameter(torch.zeros(vocab_size))
-    
-    def forward(
-        self, 
-        word_ids: torch.Tensor,          # [batch_size]
-        context_ids: torch.Tensor        # [batch_size]
-    ) -> torch.Tensor:                   # [batch_size]
-        """
-        Forward pass implementing Eq. 1 from paper.
-        
-        Args:
-            word_ids: Word indices
-            context_ids: Context word indices
-            
-        Returns:
-            Dot product scores
-        """
-        word_vecs = self.word_embed(word_ids)
-        context_vecs = self.context_embed(context_ids)
-        
-        dot_product = (word_vecs * context_vecs).sum(dim=-1)
-        return dot_product + self.word_bias[word_ids] + self.context_bias[context_ids]
-```
-
-### Using in a Notebook
-
-```python
-# Cell 1: Imports
-import torch
-import numpy as np
-from implementations.models import glove
-from implementations.utils import training, visualization
-
-# Cell 2: Model Setup
-model = glove.GloVe(vocab_size=10000, embedding_dim=300)
-optimizer = torch.optim.Adagrad(model.parameters(), lr=0.05)
-
-# Cell 3: Training Loop
-for epoch in range(10):
-    loss = training.train_epoch(model, optimizer, train_loader)
-    print(f"Epoch {epoch}: Loss = {loss:.4f}")
-
-# Cell 4: Visualization
-embeddings = model.word_embed.weight.detach()
-visualization.plot_tsne(embeddings, vocab, top_n=500)
-```
+- Start applying early. Target AI-for-science teams, simulation and CFD companies, weather and climate startups, materials and drug discovery, science groups at large companies, and "ML engineer, scientific computing" roles.
+- Keep one public repo per phase with a good README. Recruiters look at these before anything else.
+- Don't oversell PINNs in interviews. Showing you know their limits, and when a neural operator or classical solver is the better choice, demonstrates real expertise.
+- Lean on your MS in physics. Your physics background is a differentiator in this field, not just a credential.
 
 ---
 
-## 📚 Recommended Papers to Start
+## Part 4: YouTube Channels
 
-| # | Paper | Topic | Difficulty | Status |
-|---|-------|-------|------------|--------|
-| 1 | [GloVe](https://nlp.stanford.edu/pubs/glove.pdf) | Word Embeddings | 🟢 Beginner | ✓ |
-| 2 | [Word2Vec](https://arxiv.org/pdf/1310.4546.pdf) | Word Embeddings | 🟢 Beginner | ✓ |
-| 3 | [Attention Is All You Need](https://arxiv.org/pdf/1706.03762.pdf) | Transformers | 🟡 Intermediate | ✓ |
-| 4 | [Deep Residual Learning for Image Recognition](https://arxiv.org/pdf/1512.03385.pdf) | Vision | 🟡 Intermediate | ✓ |
-| 5 | [BERT: Pre-training of Deep Bidirectional Transformers](https://arxiv.org/pdf/1810.04805.pdf) | NLP | 🔴 Advanced | ⏳ |
+Recommended from memory. Check that each channel is still active and look at recent uploads before relying on it.
 
----
+### Best Overall for This Roadmap
 
-## 📖 Documentation
+- Steve Brunton (Eigensteve): Scientific ML, physics-informed learning, SINDy, dynamical systems, neural operators. Suits a physics background. Use for Phases 1 and 3.
+- Machine Learning & Simulation (Felix Koehler): Numerical PDE solvers, JAX, differentiable physics, with code walkthroughs. Useful for classical baselines and learning JAX.
 
-### Paper Summaries
+### Phases 1-2: PINNs
 
-Detailed summaries and notes for each implemented paper are available in [`docs/`](docs/):
+- Maziar Raissi: Original author of the PINN paper. Watch his lectures alongside the paper.
+- Ben Moseley: Short, practical talks on PINNs, including when they work and when they don't. Fits the Phase 2 failure-modes work.
+- Brown University / Karniadakis group lectures: Search for "Physics-Informed Machine Learning" and DeepXDE talks.
 
-- [GloVe Summary](docs/glove_summary.md)
-- [Transformer Summary](docs/transformer_summary.md)
-- [Implementation Guide](docs/IMPLEMENTATION_GUIDE.md)
+### Phase 3: Neural Operators
 
-### Learning Resources
+- Anima Anandkumar and Zongyi Li talks: Search for "Fourier Neural Operator" talks, including NVIDIA GTC and conference recordings.
+- Paris Perdikaris: Physics-informed DeepONets, gradient pathology and NTK papers.
 
-- **Notebooks**: Interactive experiments in [`notebooks/`](notebooks/)
-- **Code Templates**: Reusable patterns in [`implementations/`](implementations/)
-- **Configs**: Experiment configurations in [`configs/`](configs/)
+### Supporting Skills
 
-### Best Practices
+- Andrej Karpathy: Zero to Hero. Deep implementation habits and debugging.
+- Nathan Kutz: Data-driven science and engineering lectures.
+- Chris Rackauckas: Julia/SciML talks and MIT scientific machine learning lectures. Differentiable-programming angle.
+- Yannic Kilcher and Umar Jamil: Paper walkthroughs for reading new papers quickly.
+- NVIDIA Developer: PhysicsNeMo and industry AI-for-science talks. Helps with Phase 5 and the job search.
 
-#### Pattern 1: Equation-to-Code
-Use docstrings to bridge equations to code implementation.
+### How to Use Them
 
-```python
-def compute_loss(predictions, targets):
-    """
-    Equation (5) from paper:
-    L = -sum(y_i * log(p_i)) + lambda * ||w||^2
-    """
-    # Implementation follows naturally from equation
-```
-
-#### Pattern 2: Section-Based Comments
-Reference paper sections for context.
-
-```python
-# Section 3.2: Co-occurrence Matrix Construction
-# Based on equation (1): w_ij represents co-occurrence count
-
-def build_cooccurrence_matrix(corpus, window_size):
-    # Implementation
-```
-
-#### Pattern 3: Type Hints + Docstrings
-Clear signatures for reproducibility.
-
-```python
-def forward(
-    self, 
-    input_ids: torch.Tensor,              # [batch_size, seq_len]
-    attention_mask: Optional[torch.Tensor] = None
-) -> torch.Tensor:                        # [batch_size, seq_len, hidden_dim]
-    """Forward pass implementing Section 3.1 equations."""
-```
+- Watch a lecture first, then read the paper, then implement from scratch. Don't watch passively.
+- Use videos for intuition and papers for details. Don't copy their code.
+- Rebuild it yourself, then compare.
+- Conference talks (NeurIPS, ICML ML-for-science workshops) are free on YouTube and show what the field is currently working on.
 
 ---
 
-## ✅ Implementation Checklist
+## Project Goals
 
-Use this checklist for each new paper:
+This repository is meant to support a structured progression:
 
-- [ ] PDF saved in `papers/`
-- [ ] `implementations/models/paper_name.py` created with stubs
-- [ ] Core model implemented with docstring guidance
-- [ ] `notebooks/paper_name_learning.ipynb` created
-- [ ] Basic training loop in notebook
-- [ ] Evaluation metrics implemented
-- [ ] `docs/paper_name_summary.md` written
-- [ ] All code committed with meaningful messages
-- [ ] Results saved in `results/`
-- [ ] Tests added for critical components
+- Learn the foundations of PINNs and automatic differentiation.
+- Diagnose and mitigate common failure modes.
+- Move from PINNs to neural operators and advanced scientific ML.
+- Produce reproducible, publication-worthy results.
+- Build a portfolio that demonstrates practical AI-for-science capability.
 
 ---
 
-## 🤝 Contributing
+## Suggested Execution Pattern
 
-Contributions are welcome! To add a new paper implementation:
-
-### How to Contribute
-
-1. **Fork the repository**
-
-```bash
-git clone https://github.com/YOUR-USERNAME/deep-learning-papers-pytorch.git
-cd deep-learning-papers-pytorch
-git checkout -b feature/new-paper-impl
-```
-
-2. **Follow the implementation workflow** (see above)
-
-3. **Ensure code quality**
-
-```bash
-# Add type hints
-# Write comprehensive docstrings
-# Include unit tests for critical components
-```
-
-4. **Commit and push**
-
-```bash
-git add .
-git commit -m "feat: Add GloVe implementation with notebook and docs"
-git push origin feature/new-paper-impl
-```
-
-5. **Create a Pull Request**
-
-Open a PR with:
-- Clear description of the paper
-- Link to the original paper
-- Summary of implementation decisions
-- Any experimental results
-
-### Code Guidelines
-
-- Follow [PEP 8](https://www.python.org/dev/peps/pep-0008/)
-- Use type hints throughout
-- Include docstrings with equation references
-- Add unit tests for models and utilities
-- Keep notebooks clean and well-commented
+1. Read the paper and identify the key equations.
+2. Re-implement the model in PyTorch from scratch.
+3. Compare against a classical baseline.
+4. Run ablations and report failures honestly.
+5. Write a clear summary and publish the results.
 
 ---
 
-## 📞 Support & Community
+## Final Note
 
-### Get Help
+The goal is not to chase the latest trend, but to become capable of solving real scientific ML problems with a transparent, rigorous, and reproducible workflow.
 
-- **Issues**: [Open an issue](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/issues) for bugs or questions
-- **Discussions**: Use [GitHub Discussions](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/discussions) for general questions
-- **Documentation**: Check [`docs/`](docs/) for guides and summaries
-
-### Stay Updated
-
-- 👀 **Watch** this repo to be notified of updates
-- ⭐ **Star** if you find it useful!
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-## 📊 Project Status
-
-| Component | Status | Last Updated |
-|-----------|--------|--------------|
-| GloVe | ✅ Complete | Oct 2024 |
-| Word2Vec | ✅ Complete | Oct 2024 |
-| Transformer | 🟡 In Progress | Oct 2024 |
-| ResNet | ⏳ Planned | - |
-| BERT | ⏳ Planned | - |
-
----
-
-## 🎯 Roadmap
-
-- [x] Core repository structure
-- [x] GloVe implementation
-- [ ] Word2Vec (CBOW + Skip-gram)
-- [ ] Transformer from scratch
-- [ ] Vision models (ResNet)
-- [ ] Benchmark suite
-- [ ] Pre-trained model zoo
-- [ ] Community contributions guide
-
-See [Projects](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/projects) for detailed progress.
-
----
-
-## 🔗 Useful Links
-
-- [PyTorch Documentation](https://pytorch.org/docs/)
-- [Papers with Code](https://paperswithcode.com/)
-- [arXiv](https://arxiv.org/)
-- [Stanford NLP](https://nlp.stanford.edu/)
-
----
-
-<div align="center">
-
-**Made with ❤️ for the deep learning community**
-
-[⬆ Back to Top](#deep-learning-papers-in-pytorch)
-
-</div>
+This roadmap is intentionally practical: every milestone is designed to be turned into a public repository, blog post, or scientific preprint.
