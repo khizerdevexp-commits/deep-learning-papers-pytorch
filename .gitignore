@@ -96,3 +96,5 @@ papers/**/*.epub
 
 # Notebooks checkpoints
 .ipynb_checkpoints/
+# kaggle
+kaggle/**/*.json
