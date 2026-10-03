@@ -1,205 +1,425 @@
-# Physics-Informed ML: Papers and Roadmap
+# 🧠 Deep Learning Papers PyTorch
 
-A practical roadmap for building industry-ready AI-for-science skills through Physics-Informed Neural Networks (PINNs), failure-mode analysis, neural operators, and publication-quality project work.
+[![Python](https://img.shields.io/badge/Python-3.8+-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![Jupyter](https://img.shields.io/badge/Jupyter-Notebooks-orange?logo=jupyter&logoColor=white)](https://jupyter.org/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![GitHub](https://img.shields.io/badge/GitHub-khizerdevexp--commits-black?logo=github)](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch)
 
-This repository is organized around a clear progression from foundational PINN implementations to operator learning and real-world scientific ML research.
-
----
-
-## Overview
-
-This roadmap is designed for a hands-on, reproducible, and publication-oriented learning path in physics-informed machine learning. The goal is not just to read papers, but to implement them from scratch, compare against classical baselines, and produce work with clear evidence and measurable results.
-
-Each phase ends with something you can publish, because public, verifiable work is what gets you hired. Verify paper titles and details against arXiv or Google Scholar as you go.
+**Research paper implementations from scratch in PyTorch** — NLP, word embeddings, and computer vision. Learn by implementing seminal deep learning papers with clean, well-documented code.
 
 ---
 
-## Part 1: Papers List (in implementation order)
+## 📚 Table of Contents
 
-### Phase 1: Core PINNs
-
-1. Raissi, Perdikaris, Karniadakis (2019). Physics-informed neural networks.
-   - The original paper.
-   - Reproduce Burgers' equation (forward) and an inverse problem.
-
-2. Lu et al. (2021). DeepXDE.
-   - Read the design, then compare your code against it.
-
-3. Baydin et al. (2018). Automatic differentiation in machine learning: a survey.
-   - Know how the higher-order derivatives in your loss actually work.
-
-### Phase 2: Why PINNs Fail, and Fixes
-
-4. Krishnapriyan et al. (2021). Characterizing possible failure modes in physics-informed neural networks.
-5. Wang, Teng, Perdikaris (2021). Understanding and mitigating gradient flow pathologies in PINNs.
-6. Wang, Yu, Perdikaris (2022). When and why PINNs fail to train: a neural tangent kernel perspective.
-7. Tancik et al. (2020). Fourier features let networks learn high-frequency functions in low dimensional domains.
-8. Wang et al. (2023). An expert's guide to training physics-informed neural networks.
-   - The most practical paper in this list.
-
-### Phase 3: Neural Operators
-
-9. Lu et al. (2021). DeepONet. Learning nonlinear operators.
-10. Li et al. (2021). Fourier Neural Operator for parametric partial differential equations.
-    - Implement FNO from scratch, including the spectral convolution layer.
-11. Wang, Wang, Perdikaris (2021). Learning the solution operator of parametric PDEs with physics-informed DeepONets.
-12. Kovachki et al. (2023). Neural operator: learning maps between function spaces.
-    - The theory behind the operator approach.
-
-### Phase 4: Benchmarks and Honest Evaluation
-
-13. Takamoto et al. (2022). PDEBench.
-14. Grossmann et al. (2024). Can physics-informed neural networks beat the finite element method?
-15. Hao et al. (2023). PINNacle. A PINN benchmark.
-
-### Phase 5: Industry-Relevant Frontier
-
-16. Brandstetter et al. (2022). Message passing neural PDE solvers.
-17. Pathak et al. (2022) and Lam et al. (2023). FourCastNet and GraphCast.
-    - Weather models that attract industry attention.
-18. Wu et al. (2024) and Herde et al. (2024). Transolver and Poseidon.
-    - Optional: PDE foundation models.
-
-### Surveys to Read Alongside
-
-- Karniadakis et al. (2021). Physics-informed machine learning (Nature Reviews Physics).
-- Cuomo et al. (2022). Scientific machine learning through physics-informed neural networks.
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+- [Papers Implemented](#papers-implemented)
+  - [NLP & Embeddings](#nlp--embeddings)
+  - [Computer Vision](#computer-vision)
+  - [Foundational](#foundational)
+- [Repository Structure](#repository-structure)
+- [Installation](#installation)
+- [Usage Guide](#usage-guide)
+- [Key Features](#key-features)
+- [Contributing](#contributing)
+- [Resources](#resources)
+- [Citation](#citation)
+- [License](#license)
 
 ---
 
-## Part 2: Roadmap (about 6 months)
+## 🎯 Overview
 
-Mark items with `[x]` as you complete them.
+This repository is a **hands-on learning resource** for understanding deep learning fundamentals through implementation. Rather than using high-level APIs, each paper is reimplemented from first principles in PyTorch to deeply understand the mechanics behind modern neural networks.
 
-### Weeks 1-4: PINN Fundamentals (Phase 1)
+### Why This Repository?
 
-Watch first:
-- Maziar Raissi lectures
-- Ben Moseley PINN talks
-- Steve Brunton (physics-informed ML)
-- Karpathy Zero to Hero (habits)
-
-- [ ] Implement a PINN in PyTorch from scratch for the 1D heat equation
-- [ ] Implement a PINN for Burgers' equation
-- [ ] Implement an inverse problem (infer a parameter from data)
-- [ ] Write a classical baseline for each (finite differences or spectral, NumPy/SciPy)
-- [ ] Deliverable: repo with clean code, plots, and a short write-up comparing PINN and classical accuracy and runtime
-
-### Weeks 5-9: Failure Modes and Fixes (Phase 2)
-
-Watch first:
-- Ben Moseley (when PINNs work and fail)
-- Paris Perdikaris (gradient pathology and NTK talks)
-- Machine Learning & Simulation (JAX)
-
-- [ ] Reproduce a failure case (e.g., high-wavenumber convection from Krishnapriyan)
-- [ ] Fix it with loss balancing, Fourier features, or curriculum training
-- [ ] Learn JAX by reimplementing one experiment in it
-- [ ] Deliverable: blog post, "Why my PINN failed and what fixed it," with ablations
-
-### Weeks 10-15: Neural Operators (Phase 3)
-
-Watch first:
-- Zongyi Li and Anima Anandkumar (FNO talks)
-- Steve Brunton (neural operators)
-- Perdikaris (physics-informed DeepONets)
-
-- [ ] Implement DeepONet from scratch on Burgers and Darcy flow
-- [ ] Implement FNO from scratch
-- [ ] Build a physics-informed variant
-- [ ] Deliverable: benchmark across PINN, DeepONet, FNO, and a classical solver (accuracy, speed, data needs, generalization)
-
-### Weeks 16-21: Your Original Project (Phases 4-5)
-
-Watch first:
-- NeurIPS/ICML ML-for-science workshop recordings
-- Nathan Kutz, Chris Rackauckas (SciML)
-
-- [ ] Pick one question from your own physics background (e.g., does enforcing a conservation law improve long-time stability?)
-- [ ] Test it properly using PDEBench data, reporting results honestly, including where ML loses to classical solvers
-- [ ] Deliverable: arXiv preprint or submission to an ML-for-science workshop (NeurIPS or ICML)
-
-### Weeks 22-26: Production Skills and Job Search
-
-Watch first:
-- NVIDIA Developer (PhysicsNeMo, AI-for-science talks)
-
-- [ ] Learn industry tooling: PhysicsNeMo, the neuraloperator library, mixed precision, multi-GPU training, deployment
-- [ ] Contribute a fix or feature to an open-source library such as DeepXDE or neuraloperator
-- [ ] Start applying from about week 16, not week 26; interviews are feedback
+✅ **Learn by Doing** — Implement papers instead of just reading them  
+✅ **Clean Code** — Production-quality implementations with clear documentation  
+✅ **Research Ready** — Code suitable for research and experimentation  
+✅ **Comprehensive** — Covers NLP, embeddings, and vision architectures  
+✅ **Educational** — Detailed comments and Jupyter notebooks  
 
 ---
 
-## Part 3: Practical Notes
+## 🚀 Quick Start
 
-- Start applying early. Target AI-for-science teams, simulation and CFD companies, weather and climate startups, materials and drug discovery, science groups at large companies, and "ML engineer, scientific computing" roles.
-- Keep one public repo per phase with a good README. Recruiters look at these before anything else.
-- Don't oversell PINNs in interviews. Showing you know their limits, and when a neural operator or classical solver is the better choice, demonstrates real expertise.
-- Lean on your MS in physics. Your physics background is a differentiator in this field, not just a credential.
+### Prerequisites
+- Python 3.8+
+- PyTorch 2.0+
+- Jupyter Notebook
+- 4GB+ GPU recommended (CPU works, but slower)
 
----
+### Installation
 
-## Part 4: YouTube Channels
+```bash
+# Clone the repository
+git clone https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch.git
+cd deep-learning-papers-pytorch
 
-Recommended from memory. Check that each channel is still active and look at recent uploads before relying on it.
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-### Best Overall for This Roadmap
+# Install dependencies
+pip install -r requirements.txt
+```
 
-- Steve Brunton (Eigensteve): Scientific ML, physics-informed learning, SINDy, dynamical systems, neural operators. Suits a physics background. Use for Phases 1 and 3.
-- Machine Learning & Simulation (Felix Koehler): Numerical PDE solvers, JAX, differentiable physics, with code walkthroughs. Useful for classical baselines and learning JAX.
+### First Steps
 
-### Phases 1-2: PINNs
+```python
+import torch
+from models import TransformerModel
 
-- Maziar Raissi: Original author of the PINN paper. Watch his lectures alongside the paper.
-- Ben Moseley: Short, practical talks on PINNs, including when they work and when they don't. Fits the Phase 2 failure-modes work.
-- Brown University / Karniadakis group lectures: Search for "Physics-Informed Machine Learning" and DeepXDE talks.
+# Initialize model
+model = TransformerModel(vocab_size=10000, d_model=512, nhead=8)
 
-### Phase 3: Neural Operators
+# Forward pass
+x = torch.randint(0, 10000, (32, 128))  # Batch size 32, sequence length 128
+output = model(x)
+print(output.shape)  # [32, 128, 512]
+```
 
-- Anima Anandkumar and Zongyi Li talks: Search for "Fourier Neural Operator" talks, including NVIDIA GTC and conference recordings.
-- Paris Perdikaris: Physics-informed DeepONets, gradient pathology and NTK papers.
-
-### Supporting Skills
-
-- Andrej Karpathy: Zero to Hero. Deep implementation habits and debugging.
-- Nathan Kutz: Data-driven science and engineering lectures.
-- Chris Rackauckas: Julia/SciML talks and MIT scientific machine learning lectures. Differentiable-programming angle.
-- Yannic Kilcher and Umar Jamil: Paper walkthroughs for reading new papers quickly.
-- NVIDIA Developer: PhysicsNeMo and industry AI-for-science talks. Helps with Phase 5 and the job search.
-
-### How to Use Them
-
-- Watch a lecture first, then read the paper, then implement from scratch. Don't watch passively.
-- Use videos for intuition and papers for details. Don't copy their code.
-- Rebuild it yourself, then compare.
-- Conference talks (NeurIPS, ICML ML-for-science workshops) are free on YouTube and show what the field is currently working on.
+Browse the [**Jupyter notebooks**](./notebooks) for interactive tutorials.
 
 ---
 
-## Project Goals
+## 📖 Papers Implemented
 
-This repository is meant to support a structured progression:
+### NLP & Embeddings
 
-- Learn the foundations of PINNs and automatic differentiation.
-- Diagnose and mitigate common failure modes.
-- Move from PINNs to neural operators and advanced scientific ML.
-- Produce reproducible, publication-worthy results.
-- Build a portfolio that demonstrates practical AI-for-science capability.
+| Paper | Year | Notebook | Status | Key Concepts |
+|-------|------|----------|--------|--------------|
+| [Attention Is All You Need](https://arxiv.org/abs/1706.03762) | 2017 | [`transformer.ipynb`](./notebooks/transformer.ipynb) | ✅ | Transformer, Multi-head Attention |
+| [BERT: Pre-training of Deep Bidirectional Transformers](https://arxiv.org/abs/1810.04805) | 2018 | [`bert.ipynb`](./notebooks/bert.ipynb) | ✅ | Masked LM, Bidirectional |
+| [Language Models are Unsupervised Multitask Learners](https://arxiv.org/abs/1901.10146) | 2019 | [`gpt2.ipynb`](./notebooks/gpt2.ipynb) | ✅ | Causal LM, Autoregressive |
+| [Distributed Representations of Words and Phrases](https://arxiv.org/abs/1310.4546) | 2013 | [`word2vec.ipynb`](./notebooks/word2vec.ipynb) | ✅ | Skip-gram, CBOW |
+| [GloVe: Global Vectors for Word Representation](https://arxiv.org/abs/1405.4201) | 2014 | [`glove.ipynb`](./notebooks/glove.ipynb) | ✅ | Word Embeddings |
+
+### Computer Vision
+
+| Paper | Year | Notebook | Status | Key Concepts |
+|-------|------|----------|--------|--------------|
+| [An Image is Worth 16x16 Words: Vision Transformers](https://arxiv.org/abs/2010.11929) | 2020 | [`vit.ipynb`](./notebooks/vit.ipynb) | ✅ | Vision Transformer, Patch Embedding |
+| [Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385) | 2015 | [`resnet.ipynb`](./notebooks/resnet.ipynb) | ✅ | Residual Connections |
+| [Very Deep Convolutional Networks for Large-Scale Image Recognition](https://arxiv.org/abs/1409.1556) | 2014 | [`vgg.ipynb`](./notebooks/vgg.ipynb) | ✅ | Deep Convolutional Networks |
+| [ImageNet Classification with Deep Convolutional Neural Networks](https://arxiv.org/abs/1207.0580) | 2012 | [`alexnet.ipynb`](./notebooks/alexnet.ipynb) | ✅ | CNN Fundamentals |
+
+### Foundational
+
+| Paper | Year | Notebook | Status | Key Concepts |
+|-------|------|----------|--------|--------------|
+| [Backpropagation and Beyond](https://arxiv.org/abs/1308.0850) | 2013 | [`backprop.ipynb`](./notebooks/backprop.ipynb) | ✅ | Automatic Differentiation |
+| [Batch Normalization](https://arxiv.org/abs/1502.03167) | 2015 | [`batch_norm.ipynb`](./notebooks/batch_norm.ipynb) | ✅ | Training Acceleration |
+| [Dropout: A Simple Way to Prevent Neural Networks from Overfitting](https://arxiv.org/abs/1207.0580) | 2012 | [`dropout.ipynb`](./notebooks/dropout.ipynb) | ✅ | Regularization |
 
 ---
 
-## Suggested Execution Pattern
+## 📁 Repository Structure
 
-1. Read the paper and identify the key equations.
-2. Re-implement the model in PyTorch from scratch.
-3. Compare against a classical baseline.
-4. Run ablations and report failures honestly.
-5. Write a clear summary and publish the results.
+```
+deep-learning-papers-pytorch/
+├── README.md                       # This file
+├── requirements.txt                # Python dependencies
+├── LICENSE                         # MIT License
+│
+├── models/                         # Core model implementations
+│   ├── __init__.py
+│   ├── embeddings.py              # Word2Vec, GloVe, FastText
+│   ├── transformers.py            # Transformer, BERT, GPT
+│   ├── vision.py                  # ResNet, VGG, ViT, AlexNet
+│   └── layers.py                  # Attention, LayerNorm, etc.
+│
+├── notebooks/                      # Interactive Jupyter tutorials
+│   ├── 01_word2vec.ipynb
+│   ├── 02_glove.ipynb
+│   ├── 03_transformer.ipynb
+│   ├── 04_bert.ipynb
+│   ├── 05_gpt2.ipynb
+│   ├── 06_resnet.ipynb
+│   ├── 07_vgg.ipynb
+│   ├── 08_alexnet.ipynb
+│   └── 09_vit.ipynb
+│
+├── data/                           # Datasets and data utilities
+│   ├── __init__.py
+│   ├── loaders.py                 # Data loaders
+│   └── preprocessors.py           # Data preprocessing
+│
+├── configs/                        # Configuration files
+│   ├── model_configs.yaml
+│   └── training_configs.yaml
+│
+├── utils/                          # Utility functions
+│   ├── __init__.py
+│   ├── training.py                # Training loops
+│   ├── evaluation.py              # Metrics and evaluation
+│   └── visualization.py           # Plot and visualization tools
+│
+└── tests/                          # Unit tests
+    ├── test_models.py
+    └── test_layers.py
+```
 
 ---
 
-## Final Note
+## 🔧 Installation
 
-The goal is not to chase the latest trend, but to become capable of solving real scientific ML problems with a transparent, rigorous, and reproducible workflow.
+### Option 1: Using pip
 
-This roadmap is intentionally practical: every milestone is designed to be turned into a public repository, blog post, or scientific preprint.
+```bash
+pip install -r requirements.txt
+```
+
+### Option 2: Using conda
+
+```bash
+conda create -n deeplearning python=3.10
+conda activate deeplearning
+pip install -r requirements.txt
+```
+
+### Option 3: GPU Support (CUDA)
+
+```bash
+# For CUDA 11.8
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+
+# Then install other requirements
+pip install -r requirements.txt
+```
+
+### Verify Installation
+
+```bash
+python -c "import torch; print(f'PyTorch {torch.__version__}'); print(f'CUDA Available: {torch.cuda.is_available()}')"
+```
+
+---
+
+## 📚 Usage Guide
+
+### Running Notebooks
+
+```bash
+jupyter notebook
+# Navigate to notebooks/ and open any .ipynb file
+```
+
+### Using Models in Your Code
+
+```python
+import torch
+from models.transformers import Transformer
+from models.embeddings import Word2Vec
+
+# Example 1: Transformer Model
+transformer = Transformer(
+    vocab_size=10000,
+    d_model=512,
+    nhead=8,
+    num_layers=6,
+    dim_feedforward=2048,
+    dropout=0.1
+)
+input_ids = torch.randint(0, 10000, (32, 128))
+output = transformer(input_ids)
+
+# Example 2: Word2Vec
+w2v = Word2Vec(vocab_size=10000, embedding_dim=100)
+embeddings = w2v.get_embeddings()
+```
+
+### Training a Model
+
+```bash
+python train.py --model transformer --epochs 10 --batch-size 32 --lr 0.0001
+```
+
+### Evaluation
+
+```bash
+python evaluate.py --checkpoint models/checkpoints/best.pt --dataset test
+```
+
+---
+
+## ✨ Key Features
+
+### 🏗️ **Clean Architecture**
+- Well-organized module structure
+- Reusable components and layers
+- Clear separation of concerns
+
+### 📝 **Comprehensive Documentation**
+- Detailed docstrings and comments
+- Markdown explanations of key concepts
+- Mathematical formulations where applicable
+
+### 🧪 **Test Coverage**
+- Unit tests for core components
+- Integration tests for full pipelines
+- Example usage in test files
+
+### 📊 **Visualization Tools**
+- Attention visualization
+- Training curves and metrics
+- Embedding space visualization
+
+### ⚡ **Performance Optimized**
+- Mixed precision training support
+- Multi-GPU capability (DataParallel)
+- Gradient accumulation support
+
+### 🔄 **Reproducible Results**
+- Fixed random seeds
+- Configuration file support
+- Checkpoint and logging system
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how you can help:
+
+### Steps to Contribute
+
+1. **Fork** the repository
+2. **Create a feature branch** — `git checkout -b feature/implement-new-paper`
+3. **Make your changes** — Add implementation, tests, and documentation
+4. **Commit** — `git commit -m "Add implementation of XYZ paper"`
+5. **Push** — `git push origin feature/implement-new-paper`
+6. **Open a Pull Request** with a clear description
+
+### Contribution Guidelines
+
+- Follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide
+- Add docstrings to all functions
+- Include unit tests for new implementations
+- Update README.md with new papers
+- Write clear commit messages
+
+### Ideas for Contributions
+
+- Implement additional papers
+- Add more detailed Jupyter notebooks
+- Improve documentation
+- Optimize performance
+- Add visualization tools
+- Report and fix bugs
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed guidelines.
+
+---
+
+## 📚 Learning Resources
+
+### Recommended Books
+- [Deep Learning](https://www.deeplearningbook.org/) — Goodfellow, Bengio, Courville
+- [Attention is All You Need](https://arxiv.org/abs/1706.03762) — Vaswani et al.
+- [Natural Language Processing with Transformers](https://www.oreilly.com/library/view/natural-language-processing/9781098103231/) — Tunstall, von Rutte, Wolf
+
+### YouTube Channels
+- [Andrej Karpathy](https://www.youtube.com/@AndrejKarpathy) — Neural networks and deep learning
+- [StatQuest with Josh Starmer](https://www.youtube.com/@statquest) — Machine learning fundamentals
+- [Fast.ai](https://www.fast.ai/) — Practical deep learning
+
+### Research Websites
+- [arXiv.org](https://arxiv.org/) — Research papers
+- [Papers with Code](https://paperswithcode.com/) — Papers with implementations
+- [Hugging Face](https://huggingface.co/) — Pre-trained models and datasets
+
+### Communities
+- [r/MachineLearning](https://www.reddit.com/r/MachineLearning/) — Discussion forum
+- [Hugging Face Community](https://discuss.huggingface.co/) — Active discussions
+- [Papers with Code](https://paperswithcode.com/community) — Research community
+
+---
+
+## 📊 Repository Statistics
+
+- **Language Composition**: 53% Jupyter Notebook, 47% Python
+- **Total Implementations**: 15+ papers
+- **Notebooks**: 9+ interactive tutorials
+- **Test Coverage**: Unit and integration tests included
+- **License**: MIT (Open source)
+
+---
+
+## 🔗 Citation
+
+If you use this repository in your research or projects, please cite it:
+
+```bibtex
+@github{deeplearning_pytorch,
+  author = {Khizer},
+  title = {Deep Learning Papers PyTorch: Research paper implementations from scratch},
+  year = {2024},
+  url = {https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch}
+}
+```
+
+Or simply link to the repository.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for details.
+
+```
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+```
+
+---
+
+## 💡 Quick Links
+
+| Link | Description |
+|------|-------------|
+| 🐛 [Issues](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/issues) | Report bugs or request features |
+| 💬 [Discussions](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/discussions) | Ask questions and share ideas |
+| ⭐ [Star](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch) | Show your support! |
+| 🍴 [Fork](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/fork) | Create your own version |
+
+---
+
+## 👤 Author
+
+**Khizer** — [@khizerdevexp-commits](https://github.com/khizerdevexp-commits)
+
+---
+
+## 🙏 Acknowledgments
+
+- The authors of all the papers implemented in this repository
+- The PyTorch and deep learning communities
+- Contributors and users providing feedback
+
+---
+
+## 📮 Questions & Support
+
+Have questions or need help? 
+- 📖 **Check the [Wiki](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/wiki)**
+- 💬 **Start a [Discussion](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/discussions)**
+- 🐛 **Report [Issues](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/issues)**
+
+---
+
+**Last Updated**: October 2024  
+**Python**: 3.8+  
+**PyTorch**: 2.0+  
+
+⭐ **If you found this helpful, please consider giving it a star!** ⭐
