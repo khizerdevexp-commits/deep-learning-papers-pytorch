@@ -228,19 +228,56 @@ print(f"Epoch objective: {history[-1]:.4f}")
 
 **Setup (5 minutes):**
 
+1. Open `notebooks/glove.ipynb` in VS Code and click **Select Kernel**.
+2. Choose **Colab** > **New Colab Server**, then select an available GPU runtime. **Auto Connect** may choose the default server instead.
+3. Sign in to Google in the browser window and approve the connection back to VS Code.
+4. In VS Code Explorer, right-click the `deep-learning-papers-pytorch` folder and choose **Upload to Colab**. If prompted, choose the connected GPU server. Wait for the upload to finish, then use the Colab activity bar's **Contents** view to confirm that the folder and `implementations/models/glove.py` exist on the server. Do not clone a possibly stale remote copy over your local implementation.
+5. Run this cell to verify the uploaded project path and GPU:
+
 ```python
-# In Colab, select Runtime > Change runtime type > an available GPU accelerator.
-!git clone https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch.git
-%cd deep-learning-papers-pytorch
-!pip install -q datasets
+from pathlib import Path
+import sys
 
 import torch
+
+working_directory = Path.cwd()
+content_directory = Path("/content")
+project_candidates = [working_directory, *working_directory.parents]
+if content_directory.is_dir():
+    project_candidates.extend(
+        [content_directory]
+        + [path for path in content_directory.iterdir() if path.is_dir()]
+    )
+
+project_root = next(
+    (
+        candidate
+        for candidate in project_candidates
+        if (candidate / "implementations/models/glove.py").is_file()
+    ),
+    None,
+)
+if project_root is None:
+    content_entries = sorted(path.name for path in content_directory.iterdir())
+    raise RuntimeError(
+        f"Repository not found. Notebook cwd: {working_directory}; "
+        f"/content entries: {content_entries}. Upload the project folder from VS Code Explorer."
+    )
+sys.path.insert(0, str(project_root))
+print("Project root:", project_root)
+
 if not torch.cuda.is_available():
-    raise RuntimeError("Enable a GPU runtime in Colab, then rerun this cell")
+    raise RuntimeError("Reconnect using a Colab server with a GPU")
 print("GPU:", torch.cuda.get_device_name(0))
 ```
 
-Do not reinstall the full `requirements.txt` in Colab for this test: Colab already supplies CUDA-enabled PyTorch, and only the Hugging Face `datasets` client is needed to fetch the corpus.
+If this check lists only `.config` and `sample_data` under `/content`, the repository upload has not reached the active Colab server yet. Upload the project folder, verify it in **Contents**, and rerun the cell. This is a missing-file/path issue, not a CUDA or PyTorch error.
+
+Colab supplies its own PyTorch runtime. Install only the extra dataset client used by the WikiText example:
+
+```python
+%pip install -q datasets
+```
 
 **Pros:**
 
@@ -295,7 +332,7 @@ history = model.fit(
 )
 print("Summed epoch objectives:", [round(value, 3) for value in history])
 
-# Save a portable CPU copy to the temporary Colab filesystem.
+# Save the current weights under the uploaded repository's results folder.
 artifact = {
     "state_dict": {
         name: tensor.detach().cpu()
@@ -304,24 +341,39 @@ artifact = {
     "vocabulary": vocabulary,
     "embeddings": model.get_embeddings().detach().cpu(),
 }
-torch.save(artifact, "/content/glove_wikitext2_sample.pt")
-print("Saved /content/glove_wikitext2_sample.pt")
+results_dir = project_root / "results"
+results_dir.mkdir(parents=True, exist_ok=True)
+checkpoint_path = results_dir / "glove_wikitext2_sample.pt"
+torch.save(artifact, checkpoint_path)
+print("Saved:", checkpoint_path)
 ```
 
-Files in `/content` are removed when the runtime resets. To keep the checkpoint, mount Drive and save a copy there:
+The uploaded repository and checkpoint are on the temporary Colab server. To keep a Drive backup, mount Drive and save a copy under a matching project path:
 
 ```python
 from google.colab import drive
+from pathlib import Path
+
 drive.mount("/content/drive")
-torch.save(artifact, "/content/drive/MyDrive/glove_wikitext2_sample.pt")
+drive_results_dir = Path("/content/drive/MyDrive/deep-learning-papers-pytorch/results")
+drive_results_dir.mkdir(parents=True, exist_ok=True)
+torch.save(artifact, drive_results_dir / "glove_wikitext2_sample.pt")
 ```
 
-To download it to your computer instead:
+To transfer it to the local project, download the file from the remote `results` folder:
 
 ```python
 from google.colab import files
-files.download("/content/glove_wikitext2_sample.pt")
+files.download(str(checkpoint_path))
 ```
+
+`files.download` invokes the browser's download flow; Python cannot directly select a Windows destination folder. Set the browser to ask where each download should be saved and choose `deep-learning-papers-pytorch/results`. If the browser downloads automatically, move `glove_wikitext2_sample.pt` from its Downloads folder into the local project's `results` directory.
+
+**Finish and release Colab resources:**
+
+1. Confirm the checkpoint is in the local project's `results` folder or the Google Drive backup before removing the server. Files on the Colab server, including the uploaded repository under `/content`, are temporary.
+2. In VS Code, open the Command Palette with `Ctrl+Shift+P`, run **Colab: Remove Server**, and select the server used for training. This explicitly releases the remote server; closing the notebook or VS Code may only disconnect from it.
+3. If Google Drive was mounted and you are finished writing files, optionally run `drive.flush_and_unmount()` before removing the server.
 
 This is a GPU pipeline smoke/learning run, not a paper reproduction. The sample limits CPU co-occurrence-building time and memory; full WikiText-2 or WikiText-103 can be substantially larger. `batch_size=1024` speeds GPU updates but differs from the paper's closest per-pair setting (`batch_size=1`). The returned epoch objective is a summed training loss and is not guaranteed to decrease monotonically.
 
@@ -342,18 +394,24 @@ This is a GPU pipeline smoke/learning run, not a paper reproduction. The sample 
 
 **Setup (10 minutes):**
 
-1. Create Kaggle account: https://www.kaggle.com
-2. Get API token: Settings → Account → "Create New Token"
-3. Upload repository to Kaggle Notebook
+Kaggle runs the notebook remotely; VS Code is used to edit and submit it, not as a live Kaggle kernel connection. The prepared Kaggle folder is `kaggle/glove-wikitext2/` and its metadata enables internet and an NVIDIA T4 GPU.
 
-```bash
-# Local: Create Kaggle notebook with USB upload
-# OR use Kaggle CLI:
-pip install kaggle
-kaggle datasets upload-dir --folder-name deep-learning-papers-pytorch --path .
+1. Install the Kaggle CLI in the workspace `.venv` if needed, and authenticate once:
+
+```powershell
+& '.\.venv\Scripts\python.exe' -m pip install kaggle
+& '.\.venv\Scripts\kaggle.exe' auth login
 ```
 
-4. Create new notebook in Kaggle UI, link to your dataset
+2. The staged notebook clones the public repository at runtime. Push any local GloVe changes to GitHub first so Kaggle receives the latest code. Keep Kaggle credentials out of notebooks and source control.
+
+3. From `C:\Users\Dell\Desktop\practice`, submit the notebook to Kaggle:
+
+```powershell
+& '.\.venv\Scripts\kaggle.exe' kernels push -p '.\deep-learning-papers-pytorch\kaggle\glove-wikitext2' --accelerator NvidiaTeslaT4
+```
+
+The CLI uploads `glove_wikitext2.ipynb` with `kernel-metadata.json` and starts the remote run. The notebook downloads WikiText-2 because internet is enabled, trains on GPU, and writes its checkpoint under `/kaggle/working/results`.
 
 **Pros:**
 
@@ -370,20 +428,22 @@ kaggle datasets upload-dir --folder-name deep-learning-papers-pytorch --path .
 - ❌ More steps to set up
 - ❌ Availability, session duration, and quotas can change
 
-**Workflow (similar to Colab):**
+Check the run status and download generated files from the `practice` parent directory (`C:\Users\Dell\Desktop\practice`):
 
-```python
-# Cell 1: Setup paths
-import os
-os.chdir('/kaggle/working')
-
-# Cell 2: Clone repo
-!git clone https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch.git
-%cd deep-learning-papers-pytorch
-!pip install -q datasets
-
-# Rest is same as Colab...
+```powershell
+& '.\.venv\Scripts\kaggle.exe' kernels status khizercheema/glove-wikitext-2-gpu-training
+& '.\.venv\Scripts\kaggle.exe' kernels output khizercheema/glove-wikitext-2-gpu-training -p '.\deep-learning-papers-pytorch' --file-pattern '.*glove_wikitext2_sample\.pt$'
 ```
+
+The Kaggle notebook writes the checkpoint to `/kaggle/working/results/glove_wikitext2_sample.pt`. Setting `-p` to the `deep-learning-papers-pytorch` project root preserves that remote `results` subfolder, so the local file lands at `deep-learning-papers-pytorch\results\glove_wikitext2_sample.pt`. The `--file-pattern` option avoids downloading the cloned source tree and other run files. Do not set `-p` to the local `results` folder, or the preserved remote subfolder will create `results\results`.
+
+**Release Kaggle compute:** A `kernels push` run is finite; when `kernels status` reports `COMPLETE`, Kaggle releases its allocated compute automatically. Do not run `kaggle kernels delete` just to stop a run; that deletes the saved notebook. If a run is still active and must be stopped early, use the stop/interrupt control on its Kaggle notebook page when available.
+
+**Check GPU availability before submission:**
+
+1. Sign in to Kaggle.com and open a notebook. In its **Settings** panel, inspect **Accelerator** and confirm that a GPU option (for this kernel, T4) is selectable. If it is unavailable or Kaggle reports a quota/usage limit, wait for the quota to reset or use CPU/another available platform.
+2. Check Kaggle's current resource or usage information in the account/notebook UI. The Kaggle CLI can request a GPU, but it does not report your remaining account quota; available hardware and limits vary.
+3. After `kernels push`, confirm the notebook run status completes. The first Kaggle code cell also calls `torch.cuda.is_available()` and prints the GPU name, so a missing GPU fails early instead of starting GloVe training on CPU.
 
 ---
 
