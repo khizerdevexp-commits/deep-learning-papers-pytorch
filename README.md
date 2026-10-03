@@ -1,8 +1,49 @@
-# Deep Learning Papers Implementation in PyTorch
+# Deep Learning Papers in PyTorch
 
-A structured repository for implementing research papers from scratch in PyTorch. Focus areas: **NLP**, **Word Embeddings**, and **Vision**.
+<div align="center">
 
-## 📚 Repository Structure
+[![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Open Issues](https://img.shields.io/github/issues/khizerdevexp-commits/deep-learning-papers-pytorch)](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/issues)
+[![Last Commit](https://img.shields.io/github/last-commit/khizerdevexp-commits/deep-learning-papers-pytorch)](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/commits/main)
+
+A structured repository for implementing research papers from scratch in PyTorch with a focus on **NLP**, **Word Embeddings**, and **Computer Vision**.
+
+[Quick Start](#-quick-start) • [Workflow](#-implementation-workflow) • [Papers](#-recommended-papers) • [Documentation](#-documentation) • [Contributing](#-contributing)
+
+</div>
+
+---
+
+## Overview
+
+This repository bridges the gap between research papers and practical implementations. Each paper is translated into clear, modular, and reusable PyTorch code while preserving the original methodological intent.
+
+**Key Features:**
+- 📝 Well-documented implementations with equation references
+- 🔄 Reusable components (attention, embeddings, losses)
+- 📊 Jupyter notebooks for experimentation and visualization
+- ⚙️ Configuration-driven experiments
+- 📚 Comprehensive summaries and learning notes
+- ✅ Checklist-based workflow for consistent development
+
+---
+
+## 📋 Table of Contents
+
+- [Repository Structure](#-repository-structure)
+- [Quick Start](#-quick-start)
+- [Implementation Workflow](#-implementation-workflow)
+- [Code Examples](#-code-examples)
+- [Recommended Papers](#-recommended-papers)
+- [Documentation](#-documentation)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---
+
+## 📁 Repository Structure
 
 ```
 deep-learning-papers-pytorch/
@@ -63,167 +104,277 @@ deep-learning-papers-pytorch/
 │
 ├── requirements.txt
 ├── setup.py
+├── LICENSE
 └── .gitignore
 ```
 
+---
+
 ## 🚀 Quick Start
 
-### 1. Set Up Environment
+### Prerequisites
+
+- Python 3.10 or higher
+- Git
+- Virtual environment tool (venv, conda, etc.)
+
+### Installation
+
+**1. Clone the repository**
+
 ```bash
 git clone https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch.git
 cd deep-learning-papers-pytorch
+```
+
+**2. Create and activate a virtual environment**
+
+```bash
+# Using venv
+python -m venv .venv
+source .venv/bin/activate           # On Linux/macOS
+.venv\Scripts\activate              # On Windows
+
+# Or using conda
+conda create -n paper-impl python=3.10
+conda activate paper-impl
+```
+
+**3. Install dependencies**
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 2. Add a New Paper Implementation
+**4. (Optional) Install in development mode**
 
-Follow the workflow for each paper:
+```bash
+pip install -e .
+```
 
-**Step 1:** Save PDF in `papers/` directory
+### Verify Installation
+
+```python
+import torch
+from implementations.models import glove
+
+model = glove.GloVe(vocab_size=10000, embedding_dim=300)
+print(f"Model created successfully: {model}")
+```
+
+---
+
+## 🔄 Implementation Workflow
+
+Each paper follows a consistent, structured approach:
+
+### Step 1: Add the Paper
+
+Save the original PDF in the `papers/` directory.
+
 ```bash
 papers/your_paper.pdf
 ```
 
-**Step 2:** Create implementation module in `implementations/models/`
+### Step 2: Create Implementation
+
+Create a new module in `implementations/models/` with docstring-guided structure.
+
 ```bash
 implementations/models/your_paper.py
 ```
 
-**Step 3:** Create learning notebook in `notebooks/`
+### Step 3: Create Learning Notebook
+
+Add experiments and visualizations in a Jupyter notebook.
+
 ```bash
 notebooks/your_paper_learning.ipynb
 ```
 
-**Step 4:** Add paper summary in `docs/`
+### Step 4: Document the Paper
+
+Write a technical summary in `docs/`.
+
 ```bash
 docs/your_paper_summary.md
 ```
 
-### 3. Implementation Workflow
+### Suggested Workflow Timeline
 
-For each paper, follow this structured approach:
+| Phase | Time | Activity |
+|-------|------|----------|
+| **Review** | 20 min | Read abstract, key equations, diagrams from PDF |
+| **Implement** | 50 min | Code model in `implementations/models/` with Copilot |
+| **Experiment** | 40 min | Test in notebook, add visualizations |
+| **Document** | 10 min | Write summary, commit with meaningful message |
 
-1. **Read & Annotate** (20 min)
-   - Review paper abstract, key equations, figures
-   - Note section numbers for code comments
+---
 
-2. **Code with Comments** (40 min)
-   - Implement in `implementations/models/paper_name.py`
-   - Use docstrings matching equation numbers from paper
-   - Let Copilot suggest implementations from docstrings
+## 💻 Code Examples
 
-3. **Experiment in Notebook** (40 min)
-   - Import from implementations
-   - Add visualizations & test cases
-   - Document key findings
-
-4. **Document & Version** (10 min)
-   - Add summary to `docs/`
-   - Commit with meaningful messages
-
-## 📖 Implementation Template
-
-### Code Template: `implementations/models/template.py`
+### Basic Model Implementation
 
 ```python
 """
-[Paper Title]: [Short Description]
-Reference: [Paper URL]
-Citation: [BibTeX]
+GloVe: Global Vectors for Word Representation
+Reference: https://nlp.stanford.edu/pubs/glove.pdf
+Citation: Pennington et al., 2014
 
 Key Equations:
-    Eq. X: [Description]
-    Eq. Y: [Description]
+    Eq. 1: w_i · w_j + b_i + b_j = log(X_ij)
+    Eq. 2: L = Σ f(X_ij) * (w_i · w_j + b_i + b_j - log(X_ij))^2
 """
 
 import torch
 import torch.nn as nn
-from typing import Tuple, Optional
+from typing import Optional
 
-class YourModel(nn.Module):
+class GloVe(nn.Module):
     """
-    Main model class.
+    GloVe embedding model.
     
     Args:
-        vocab_size (int): Size of vocabulary
-        embedding_dim (int): Embedding dimension
+        vocab_size (int): Size of the vocabulary
+        embedding_dim (int): Dimension of word embeddings
+        context_dim (int): Dimension of context embeddings
     """
     
-    def __init__(self, vocab_size: int, embedding_dim: int):
+    def __init__(
+        self, 
+        vocab_size: int, 
+        embedding_dim: int, 
+        context_dim: int = 300
+    ):
         super().__init__()
         self.vocab_size = vocab_size
         self.embedding_dim = embedding_dim
+        
+        # Section 3.1: Word and context embeddings
+        self.word_embed = nn.Embedding(vocab_size, embedding_dim)
+        self.context_embed = nn.Embedding(vocab_size, context_dim)
+        
+        # Bias terms
+        self.word_bias = nn.Parameter(torch.zeros(vocab_size))
+        self.context_bias = nn.Parameter(torch.zeros(vocab_size))
     
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass"""
-        pass
+    def forward(
+        self, 
+        word_ids: torch.Tensor,          # [batch_size]
+        context_ids: torch.Tensor        # [batch_size]
+    ) -> torch.Tensor:                   # [batch_size]
+        """
+        Forward pass implementing Eq. 1 from paper.
+        
+        Args:
+            word_ids: Word indices
+            context_ids: Context word indices
+            
+        Returns:
+            Dot product scores
+        """
+        word_vecs = self.word_embed(word_ids)
+        context_vecs = self.context_embed(context_ids)
+        
+        dot_product = (word_vecs * context_vecs).sum(dim=-1)
+        return dot_product + self.word_bias[word_ids] + self.context_bias[context_ids]
 ```
 
-### Notebook Template Structure
+### Using in a Notebook
 
+```python
+# Cell 1: Imports
+import torch
+import numpy as np
+from implementations.models import glove
+from implementations.utils import training, visualization
+
+# Cell 2: Model Setup
+model = glove.GloVe(vocab_size=10000, embedding_dim=300)
+optimizer = torch.optim.Adagrad(model.parameters(), lr=0.05)
+
+# Cell 3: Training Loop
+for epoch in range(10):
+    loss = training.train_epoch(model, optimizer, train_loader)
+    print(f"Epoch {epoch}: Loss = {loss:.4f}")
+
+# Cell 4: Visualization
+embeddings = model.word_embed.weight.detach()
+visualization.plot_tsne(embeddings, vocab, top_n=500)
 ```
-Cell 1: Imports & Setup
-Cell 2: Paper Summary (Markdown)
-Cell 3: Load Implementation
-Cell 4: Data Preparation
-Cell 5: Model Training
-Cell 6: Evaluation & Visualization
-Cell 7: Key Insights (Markdown)
-```
 
-## 🎯 Learning Strategy
+---
 
-**Per Paper: 2-3 Hour Sessions**
+## 📚 Recommended Papers to Start
 
-| Phase | Time | Activity |
-|-------|------|----------|
-| **Review** | 20 min | Read abstract, equations, diagrams from PDF |
-| **Implement** | 50 min | Code model using Copilot + docstrings |
-| **Experiment** | 40 min | Notebook testing, visualization |
-| **Document** | 10 min | Summary + commit |
+| # | Paper | Topic | Difficulty | Status |
+|---|-------|-------|------------|--------|
+| 1 | [GloVe](https://nlp.stanford.edu/pubs/glove.pdf) | Word Embeddings | 🟢 Beginner | ✓ |
+| 2 | [Word2Vec](https://arxiv.org/pdf/1310.4546.pdf) | Word Embeddings | 🟢 Beginner | ✓ |
+| 3 | [Attention Is All You Need](https://arxiv.org/pdf/1706.03762.pdf) | Transformers | 🟡 Intermediate | ✓ |
+| 4 | [Deep Residual Learning for Image Recognition](https://arxiv.org/pdf/1512.03385.pdf) | Vision | 🟡 Intermediate | ✓ |
+| 5 | [BERT: Pre-training of Deep Bidirectional Transformers](https://arxiv.org/pdf/1810.04805.pdf) | NLP | 🔴 Advanced | ⏳ |
 
-**Key Principle:** Code once, reference forever. No manual copy-paste between tools.
+---
 
-## 💡 Copilot Best Practices
+## 📖 Documentation
 
-### Pattern 1: Equation-to-Code
+### Paper Summaries
+
+Detailed summaries and notes for each implemented paper are available in [`docs/`](docs/):
+
+- [GloVe Summary](docs/glove_summary.md)
+- [Transformer Summary](docs/transformer_summary.md)
+- [Implementation Guide](docs/IMPLEMENTATION_GUIDE.md)
+
+### Learning Resources
+
+- **Notebooks**: Interactive experiments in [`notebooks/`](notebooks/)
+- **Code Templates**: Reusable patterns in [`implementations/`](implementations/)
+- **Configs**: Experiment configurations in [`configs/`](configs/)
+
+### Best Practices
+
+#### Pattern 1: Equation-to-Code
+Use docstrings to bridge equations to code implementation.
+
 ```python
 def compute_loss(predictions, targets):
     """
     Equation (5) from paper:
     L = -sum(y_i * log(p_i)) + lambda * ||w||^2
-    
-    Args:
-        predictions: model outputs
-        targets: ground truth labels
     """
-    # Copilot suggests implementation from equation
+    # Implementation follows naturally from equation
 ```
 
-### Pattern 2: Section-Based Comments
+#### Pattern 2: Section-Based Comments
+Reference paper sections for context.
+
 ```python
 # Section 3.2: Co-occurrence Matrix Construction
 # Based on equation (1): w_ij represents co-occurrence count
 
 def build_cooccurrence_matrix(corpus, window_size):
-    # Copilot generates code matching paper context
+    # Implementation
 ```
 
-### Pattern 3: Type Hints + Docstrings
+#### Pattern 3: Type Hints + Docstrings
+Clear signatures for reproducibility.
+
 ```python
 def forward(
     self, 
-    input_ids: torch.Tensor,           # [batch_size, seq_len]
+    input_ids: torch.Tensor,              # [batch_size, seq_len]
     attention_mask: Optional[torch.Tensor] = None
-) -> torch.Tensor:                     # [batch_size, seq_len, hidden_dim]
-    """
-    Forward pass implementing Section 3.1 equations.
-    """
+) -> torch.Tensor:                        # [batch_size, seq_len, hidden_dim]
+    """Forward pass implementing Section 3.1 equations."""
 ```
 
-## 📋 Paper Implementation Checklist
+---
 
-For each new paper, use this checklist:
+## ✅ Implementation Checklist
+
+Use this checklist for each new paper:
 
 - [ ] PDF saved in `papers/`
 - [ ] `implementations/models/paper_name.py` created with stubs
@@ -234,29 +385,121 @@ For each new paper, use this checklist:
 - [ ] `docs/paper_name_summary.md` written
 - [ ] All code committed with meaningful messages
 - [ ] Results saved in `results/`
-
-## 🔗 Recommended Papers to Start
-
-1. **GloVe** (Word Embeddings) - Good starting point
-2. **Word2Vec** (CBOW & Skip-gram) - Foundation
-3. **Attention Is All You Need** (Transformers) - Core NLP
-4. **ResNet** (Vision) - Vision baseline
-5. **BERT** (Language Models) - Advanced NLP
-
-## 📌 Tips
-
-- **Always commit**: Use git to track learning progress
-- **Reuse modules**: Build a library of attention, embedding, and loss layers
-- **Version notebooks**: Use `_v1`, `_v2` for iteration
-- **Link code↔paper**: Add equation numbers as comments in code
-- **Test early**: Write simple test functions for each component
-
-## 📞 Support
-
-Refer to `docs/` for paper summaries and implementation notes.
+- [ ] Tests added for critical components
 
 ---
 
-**Happy Learning! 🚀**
+## 🤝 Contributing
 
-Each paper you implement becomes a reusable building block for your next project.
+Contributions are welcome! To add a new paper implementation:
+
+### How to Contribute
+
+1. **Fork the repository**
+
+```bash
+git clone https://github.com/YOUR-USERNAME/deep-learning-papers-pytorch.git
+cd deep-learning-papers-pytorch
+git checkout -b feature/new-paper-impl
+```
+
+2. **Follow the implementation workflow** (see above)
+
+3. **Ensure code quality**
+
+```bash
+# Add type hints
+# Write comprehensive docstrings
+# Include unit tests for critical components
+```
+
+4. **Commit and push**
+
+```bash
+git add .
+git commit -m "feat: Add GloVe implementation with notebook and docs"
+git push origin feature/new-paper-impl
+```
+
+5. **Create a Pull Request**
+
+Open a PR with:
+- Clear description of the paper
+- Link to the original paper
+- Summary of implementation decisions
+- Any experimental results
+
+### Code Guidelines
+
+- Follow [PEP 8](https://www.python.org/dev/peps/pep-0008/)
+- Use type hints throughout
+- Include docstrings with equation references
+- Add unit tests for models and utilities
+- Keep notebooks clean and well-commented
+
+---
+
+## 📞 Support & Community
+
+### Get Help
+
+- **Issues**: [Open an issue](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/issues) for bugs or questions
+- **Discussions**: Use [GitHub Discussions](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/discussions) for general questions
+- **Documentation**: Check [`docs/`](docs/) for guides and summaries
+
+### Stay Updated
+
+- 👀 **Watch** this repo to be notified of updates
+- ⭐ **Star** if you find it useful!
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## 📊 Project Status
+
+| Component | Status | Last Updated |
+|-----------|--------|--------------|
+| GloVe | ✅ Complete | Oct 2024 |
+| Word2Vec | ✅ Complete | Oct 2024 |
+| Transformer | 🟡 In Progress | Oct 2024 |
+| ResNet | ⏳ Planned | - |
+| BERT | ⏳ Planned | - |
+
+---
+
+## 🎯 Roadmap
+
+- [x] Core repository structure
+- [x] GloVe implementation
+- [ ] Word2Vec (CBOW + Skip-gram)
+- [ ] Transformer from scratch
+- [ ] Vision models (ResNet)
+- [ ] Benchmark suite
+- [ ] Pre-trained model zoo
+- [ ] Community contributions guide
+
+See [Projects](https://github.com/khizerdevexp-commits/deep-learning-papers-pytorch/projects) for detailed progress.
+
+---
+
+## 🔗 Useful Links
+
+- [PyTorch Documentation](https://pytorch.org/docs/)
+- [Papers with Code](https://paperswithcode.com/)
+- [arXiv](https://arxiv.org/)
+- [Stanford NLP](https://nlp.stanford.edu/)
+
+---
+
+<div align="center">
+
+**Made with ❤️ for the deep learning community**
+
+[⬆ Back to Top](#deep-learning-papers-in-pytorch)
+
+</div>
